@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 import React from 'react';
 import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -75,7 +75,7 @@ const UserFeedback = () => {
 	};
 
 	const handleSubmit = () => {
-		console.log("Feedback submitted");
+		Alert.alert("Thank you!", "Your response has been submitted.");
 	};
 
 	return (
