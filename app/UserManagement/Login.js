@@ -4,11 +4,14 @@ import { AppView } from './../../components/AppView';
 import React, { useState } from "react";
 import { View, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { DB } from '../../utils/DBConnect';
+import { useUser } from '../../hooks/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
-
+    const { setUser } = useUser();
     const navigation = useNavigation();
 
     const [loginDetails, setLoginDetails] = useState({
@@ -21,6 +24,30 @@ export default function LoginScreen() {
             ...prevDetails,
             [field]: value,
         }));
+    };
+
+    const handleLogin = () => {
+        const userRef = collection(DB, "user");
+
+        console.log("Login details:", loginDetails);
+
+        const q = query(
+            userRef,
+            where("email", "==", loginDetails.email),
+            where("password", "==", loginDetails.password)
+        );
+
+        getDocs(q).then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                console.error("Invalid email or password");
+            } else {
+                const userData = querySnapshot.docs[0].data();
+                setUser(userData);
+                console.log("User logged in:", userData);
+            }
+        }).catch((error) => {
+            console.error("Error during login:", error);
+        });
     };
 
     return (
@@ -47,7 +74,7 @@ export default function LoginScreen() {
                     mode="outlined"
                 />
                 <View style={styles.buttonContainer}>
-                    <Button mode="contained" onPress={() => console.log('Pressed')} style={styles.buttonStyle}>
+                    <Button mode="contained" onPress={() => handleLogin()} style={styles.buttonStyle}>
                         Login
                     </Button>
                 </View>
@@ -58,7 +85,9 @@ export default function LoginScreen() {
             </View>
         </AppView>
     );
-} const styles = StyleSheet.create({
+}
+
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'flex-start',
