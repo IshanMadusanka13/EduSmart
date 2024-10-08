@@ -1,11 +1,13 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Image, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import React from 'react';
 import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import Lottie from 'lottie-react-native';
 import EmojiSlider from "./EmojiSlider";
 
+
 const styles = StyleSheet.create({
+
 	header: {
 		backgroundColor: '#7781FB',
 		borderBottomLeftRadius: 20,
@@ -19,28 +21,24 @@ const styles = StyleSheet.create({
 		shadowRadius: 3,
 		elevation: 5,
 		flexDirection: 'row',
-
 	},
 	headerTitle: {
 		color: '#fff',
 		fontWeight: 'bold',
 		fontSize: 20,
 		textAlign: 'center',
-		flex: 1,
+		flex: 2,
 	},
-
 	backButton: {
-		position: 'absolute',
-		left: 15,
+		position: 'flex',
+		left: 20,
 	},
-
 	userImage: {
 		width: 35,
 		height: 35,
 		borderRadius: 20,
-		position: 'absolute',
+		position: 'flex',
 		right: 20,
-		top: 15,
 	},
 
 	text: {
@@ -79,12 +77,12 @@ const UserFeedback = () => {
 	};
 
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<View style={{ flex: 1, backgroundColor: 'white' }}>
+
+		<View style={{ flex: 1, backgroundColor: 'white' }}>
 			<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
 			<View style={styles.header}>
 				<TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-					<AntDesign name="arrowleft" size={24} color="#fff" />
+					<AntDesign name="arrowleft" size={24} color="#fff" style={{ marginLeft: 20 }} />
 				</TouchableOpacity>
 				<Text style={styles.headerTitle}>Review joined class</Text>
 				<Image
@@ -226,7 +224,7 @@ const UserFeedback = () => {
 					</ScrollView>
 				</KeyboardAvoidingView>
 			</View>
-		</TouchableWithoutFeedback>
+
 
 	);
 };
