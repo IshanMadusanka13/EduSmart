@@ -21,13 +21,17 @@ export default function LoginScreen() {
             ...prevDetails,
             [field]: value,
         }));
+        
     };
 
     return (
         <AppView style={styles.container}>
             <View style={styles.headerContainer}>
-                <AppText type='title'>EduSmart</AppText>
-                <AppText type='subtitle'>Login</AppText>
+                <AppText style={styles.header} type='title'>EduSmart</AppText>
+                
+            </View>
+            <View style={styles.titleContainer}>
+            <AppText style={styles.title} type='subtitle'>Login</AppText>
             </View>
             <View style={styles.formContainer}>
                 <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
@@ -51,7 +55,7 @@ export default function LoginScreen() {
                         Login
                     </Button>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate('StudentRegister')} style={styles.registerContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.registerContainer}>
                     <AppText>Don't have an account? <AppText style={styles.registerText}>Register</AppText></AppText>
                 </TouchableOpacity>
 
@@ -67,9 +71,27 @@ export default function LoginScreen() {
     },
     headerContainer: {
         width: '100%',
-        paddingTop: height * 0.12,
+        paddingTop: height * 0.019,
         alignItems: 'center',
         marginBottom: height * 0.05,
+
+    },
+    titleContainer: {
+        width: '100%',
+        alignItems: 'left',
+        //marginBottom: height * 0.019,
+    },
+    header: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        color: '#674fa3',
+        
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#674fa3',
+        alignItems: 'left',
     },
     formContainer: {
         flex: 1,
@@ -84,7 +106,7 @@ export default function LoginScreen() {
     },
     input: {
         width: '100%',
-        marginBottom: 15,
+        marginBottom: 25,
         height: 50,
         borderColor: 'none',
         paddingHorizontal: 10,
@@ -103,7 +125,7 @@ export default function LoginScreen() {
         alignItems: 'center',
     },
     registerText: {
-        color: 'blue',
+        color: '#674fa3',
         fontWeight: 'bold',
     },
 });
