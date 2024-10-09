@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
-import { TextInput, Button, IconButton } from 'react-native-paper';
-import { DB } from '../../utils/DBConnect'; // Firebase connection
-import { collection, addDoc } from 'firebase/firestore'; // Firestore methods
+import { TextInput, Button } from 'react-native-paper';
+import { DB } from '../../utils/DBConnect';
+import { collection, addDoc } from 'firebase/firestore'; 
 
 const ManagerRegister = () => {
 	const navigation = useNavigation();
@@ -18,6 +18,7 @@ const ManagerRegister = () => {
 		Re_Password: '',
 	});
 
+	const [errors, setErrors] = useState({});
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [rePasswordVisible, setRePasswordVisible] = useState(false);
 
@@ -26,11 +27,38 @@ const ManagerRegister = () => {
 			...prevDetails,
 			[field]: value,
 		}));
+
+		validateField(field, value);
 	};
 
 	const handleBackPress = () => {
 		console.log('Back button pressed');
 		navigation.goBack();
+	};
+
+	const validateField = (field, value) => {
+		let error = '';
+		switch (field) {
+			case 'Email_Address':
+				const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!emailPattern.test(value)) error = 'Please enter a valid email address.';
+				break;
+			case 'Password':
+				const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*#?&]{8,}$/;
+				if (!passwordPattern.test(value)) {
+					error = 'Password must contain at least 8 characters, including uppercase, lowercase, special character, and number.';
+				}
+				break;
+			case 'Re_Password':
+				if (value !== registerDetails.Password) error = 'Passwords do not match.';
+				break;
+			case 'Username':
+				if (/\s/.test(value)) error = 'Username cannot contain spaces.';
+				break;
+			default:
+				if (!value) error = `${field.replace('_', ' ')} is required.`;
+		}
+		setErrors((prevErrors) => ({ ...prevErrors, [field]: error }));
 	};
 
 	const handleRegister = async () => {
@@ -47,14 +75,15 @@ const ManagerRegister = () => {
 			return;
 		}
 
-		const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*#?&]{8,}$/;
-		if (!passwordPattern.test(Password)) {
-			Alert.alert('Error', 'Password must contain at least 8 characters, including uppercase, lowercase, special character, and number.');
-			return;
-		}
+		let valid = true;
+		Object.keys(registerDetails).forEach((field) => {
+			if (validateField(field, registerDetails[field])) {
+				valid = false;
+			}
+		});
 
-		if (/\s/.test(Username)) {
-			Alert.alert('Error', 'Username cannot contain spaces.');
+		if (!valid) {
+			Alert.alert('Error', 'Please fill in all required fields correctly.');
 			return;
 		}
 
@@ -94,7 +123,8 @@ const ManagerRegister = () => {
 					<View>
 						<Text style={styles.title}>Register</Text>
 					</View>
-					<View style={styles.formContainer}>
+					<View >
+						<View style={styles.formContainer}>
 						<TextInput
 							label="Institute Name"
 							value={registerDetails.Institute_name}
@@ -102,6 +132,9 @@ const ManagerRegister = () => {
 							style={[styles.input, { borderRadius: 20 }]}
 							mode="outlined"
 						/>
+							{errors.Institute_name && <Text style={styles.errorText}>{errors.Institute_name}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<TextInput
 							label="City"
 							value={registerDetails.city}
@@ -109,6 +142,9 @@ const ManagerRegister = () => {
 							style={styles.input}
 							mode="outlined"
 						/>
+							{errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<TextInput
 							label="Address"
 							value={registerDetails.Address}
@@ -116,6 +152,9 @@ const ManagerRegister = () => {
 							style={styles.input}
 							mode="outlined"
 						/>
+							{errors.Address && <Text style={styles.errorText}>{errors.Address}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<TextInput
 							label="Email Address"
 							value={registerDetails.Email_Address}
@@ -123,6 +162,9 @@ const ManagerRegister = () => {
 							style={styles.input}
 							mode="outlined"
 						/>
+							{errors.Email_Address && <Text style={styles.errorText}>{errors.Email_Address}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<TextInput
 							label="Username"
 							value={registerDetails.Username}
@@ -130,6 +172,9 @@ const ManagerRegister = () => {
 							style={styles.input}
 							mode="outlined"
 						/>
+							{errors.Username && <Text style={styles.errorText}>{errors.Username}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<TextInput
 							label="Password"
 							value={registerDetails.Password}
@@ -144,6 +189,9 @@ const ManagerRegister = () => {
 							style={styles.input}
 							mode="outlined"
 						/>
+							{errors.Password && <Text style={styles.errorText}>{errors.Password}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<TextInput
 							label="Re-Password"
 							value={registerDetails.Re_Password}
@@ -158,9 +206,13 @@ const ManagerRegister = () => {
 							style={styles.input}
 							mode="outlined"
 						/>
+							{errors.Re_Password && <Text style={styles.errorText}>{errors.Re_Password}</Text>}
+						</View>
+						<View style={styles.formContainer}>
 						<Button mode="contained" onPress={handleRegister} style={styles.button}>
 							Register
 						</Button>
+						</View>
 					</View>
 				</ScrollView>
 			</KeyboardAvoidingView>
@@ -169,6 +221,12 @@ const ManagerRegister = () => {
 };
 
 const styles = StyleSheet.create({
+
+	errorText: {
+		color: 'red',
+		alignSelf: 'flex-start',
+		marginBottom: 10,
+	},
 	header: {
 		backgroundColor: '#7781FB',
 		borderBottomLeftRadius: 20,
@@ -199,6 +257,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		width: '100%',
 		paddingHorizontal: 20,
+		marginBottom: 5,
 	},
 	title: {
 		fontWeight: 'bold',
@@ -208,7 +267,8 @@ const styles = StyleSheet.create({
 	},
 	input: {
 		width: '100%',
-		marginBottom: 15,
+
+
 	},
 	button: {
 		width: '60%',
