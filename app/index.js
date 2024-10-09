@@ -6,6 +6,9 @@ import StudentRegister from './UserManagement/StudentRegister';
 import UserFeedback from './UserFeedback/UserFeedback';
 import ManagerRegister from './Manager/ManagerRegister';
 import ManagerDashboard from './Manager/ManageDashboard';
+import StudentManagement from './Manager/StudentsManagement';
+import TeachersManagement from './Manager/TeachersManagement';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -32,7 +35,8 @@ export default function App() {
       <Stack.Screen name="UserFeedback" component={UserFeedback} options={{ headerShown: false, }} />
       <Stack.Screen name="ManagerRegister" component={ManagerRegister} options={{ headerShown: false, }} />
       <Stack.Screen name="ManagerDashboard" component={ManagerDashboard} options={{ headerShown: false, }} />
-
+      <Stack.Screen name="StudentManagement" component={StudentManagement} options={{ headerShown: false, }} />
+      <Stack.Screen name="TeachersManagement" component={TeachersManagement} options={{ headerShown: false, }} />
 
     </Stack.Navigator>
   );

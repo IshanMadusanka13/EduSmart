@@ -32,7 +32,6 @@ const ManageDashboard = () => {
 	};
 
 	const handleProfile = () => {
-		// navigation.navigate('ProfileScreen');
 		navigation.goBack();
 	};
 
@@ -106,7 +105,7 @@ const ManageDashboard = () => {
 			</View>
 			{/* Dropdown */}
 			{dropdownVisible && (
-				<View style={styles.dropdown}>AntDesignback
+				<View style={styles.dropdown}>
 					<TouchableOpacity onPress={handleProfile} style={styles.dropdownItem}>
 						<Text style={styles.dropdownText}>Profile</Text>
 					</TouchableOpacity>
@@ -119,38 +118,36 @@ const ManageDashboard = () => {
 			{/* Cards Section */}
 			<ScrollView>
 				<View style={styles.cardContainer}>
-					<Card style={styles.card} onPress={() => console.log('Card 1 pressed')}>
+					<Card style={styles.card} onPress={() => navigation.navigate('TeachersManagement')}>
 						<Card.Title
 							title="Teachers"
 							titleStyle={styles.cardTitle}
 							style={styles.cardTitleContainer} />
-						<TouchableOpacity onPress={handleImagePress} style={styles.cardImageButton}>
-
+						<TouchableOpacity onPress={() => navigation.navigate('TeachersManagement')} style={styles.cardImageButton}>
 							<FontAwesome5 name="chalkboard-teacher" size={24} color="#7781FB" />
 						</TouchableOpacity>
 						<Card.Content>
 							<Text style={styles.cardContentText}>{teacherCount}</Text>
 						</Card.Content>
 						<TouchableOpacity onPress={handleImagePress} style={styles.cardImageButton2}>
-							<AntDesign name="adduser" size={24} color="red" />
+							<AntDesign name="adduser" size={27} color="red" />
 						</TouchableOpacity>
 					</Card>
 				</View>
 				<View style={styles.cardContainer}>
-					<Card style={styles.card} onPress={() => console.log('Card 1 pressed')}>
+					<Card style={styles.card} onPress={() => navigation.navigate('StudentManagement')}>
 						<Card.Title
 							title="Students"
 							titleStyle={styles.cardTitle}
 							style={styles.cardTitleContainer} />
-						<TouchableOpacity onPress={handleImagePress} style={styles.cardImageButton}>
-
+						<TouchableOpacity onPress={() => navigation.navigate('StudentManagement')} style={styles.cardImageButton}>
 							<FontAwesome5 name="chalkboard-teacher" size={24} color="#7781FB" />
 						</TouchableOpacity>
 						<Card.Content>
 							<Text style={styles.cardContentText}>{studentCount}</Text>
 						</Card.Content>
 						<TouchableOpacity onPress={handleImagePress} style={styles.cardImageButton2}>
-							<AntDesign name="adduser" size={24} color="red" />
+							<AntDesign name="adduser" size={27} color="red" />
 						</TouchableOpacity>
 					</Card>
 				</View>
@@ -230,8 +227,8 @@ const styles = StyleSheet.create({
 	},
 	cardTitle: {
 		paddingTop: 10,
-		color: '#808080', // Change the color of the title
-		fontSize: 25,     // Customize the font size
+		color: '#808080',
+		fontSize: 25,     
 		fontWeight: '700',
 
 	},
@@ -251,6 +248,7 @@ const styles = StyleSheet.create({
 		right: 20,
 		top: 12,
 	},
+
 	cardUserImage: {
 		width: 35,
 		height: 35,
