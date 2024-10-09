@@ -7,7 +7,7 @@ import { AppView } from '../../components/AppView';
 import { AppText } from '../../components/AppText';
 
 export default function ParentNotification({ route }) {
-  const studentId = "0001";
+  const { studentId } = route.params; 
   const [notifications, setNotifications] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 

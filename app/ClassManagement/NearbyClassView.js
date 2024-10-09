@@ -4,16 +4,20 @@ import { Button } from 'react-native-paper';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useNavigation } from "expo-router";
-import { collection, getDoc, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { DB } from "../../utils/DBConnect";
+import { useUser } from "../../hooks/UserContext";
+import { UserTypes } from "../../constants/UserTypes";
 
 export default function NearbyClassView() {
     const navigation = useNavigation();
+    const user = useUser();
     const [region, setRegion] = useState(null);
     const [loading, setLoading] = useState(true);
     const [markers, setMarkers] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [markerDetails, setMarkerDetails] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const getCurrentLocation = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -36,6 +40,9 @@ export default function NearbyClassView() {
 
     useEffect(() => {
         getCurrentLocation();
+        if (user.user.userType === UserTypes.InstituteManager) {
+            setIsAdmin(true);
+        }
     }, []);
 
     useEffect(() => {
@@ -63,6 +70,23 @@ export default function NearbyClassView() {
 
     const handleCloseModal = () => {
         setModalVisible(false);
+    };
+    const handleUpdate = () => {
+        setModalVisible(false);
+        console.log(markerDetails);
+        navigation.navigate('AddClass', { classDetails: markerDetails });
+    };
+
+    const handleDelete = async () => {
+        try {
+            const classDocRef = doc(DB, "classes", markerDetails.id);
+            await deleteDoc(classDocRef); 
+            console.log("Document deleted successfully!");
+            setModalVisible(false);
+            setMarkers((prevMarkers) => prevMarkers.filter(marker => marker.id !== markerDetails.id));
+        } catch (error) {
+            console.error("Error deleting document: ", error);
+        }
     };
 
     return (
@@ -139,6 +163,26 @@ export default function NearbyClassView() {
                             )}
 
                         </ScrollView>
+                        {isAdmin && (
+                            <Button
+                                mode="contained"
+                                onPress={handleUpdate}
+                                style={styles.closeButton}
+                                contentStyle={{ paddingVertical: 10 }}
+                            >
+                                Update
+                            </Button>
+                        )}
+                        {isAdmin && (
+                            <Button
+                                mode="contained"
+                                onPress={handleDelete}
+                                style={styles.closeButton}
+                                contentStyle={{ paddingVertical: 10 }}
+                            >
+                                Delete
+                            </Button>
+                        )}
 
                         <Button
                             mode="contained"

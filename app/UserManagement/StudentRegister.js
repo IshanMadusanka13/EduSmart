@@ -34,7 +34,7 @@ const StudentRegister = () => {
                 const firstLetter = UserTypes.student.charAt(0).toUpperCase();
                 const size = querySnapshot.empty ? 0 : querySnapshot.size;
                 const paddedNumber = (size + 1).toString().padStart(4, '0');
-                studentId = `${firstLetter}${paddedNumber}`;
+                var studentId = `${firstLetter}${paddedNumber}`;
 
                 var student = {
                     studentId: studentId,

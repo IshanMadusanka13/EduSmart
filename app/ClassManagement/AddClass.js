@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useNavigation } from 'expo-router';
+import { useNavigation } from 'expo-router'; 
 import { AppText } from '../../components/AppText';
-import { AppView } from '../../components/AppView';
 import { Button, TextInput } from 'react-native-paper';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, updateDoc, doc, collection, query, where, getDocs } from 'firebase/firestore';
 import { DB } from '../../utils/DBConnect';
 import { Streams, Subjects, WeekDays } from '../../constants/ClassDetails';
 import { StyleSheet, View, ActivityIndicator, Image, ScrollView } from 'react-native';
@@ -13,23 +12,34 @@ import * as Location from 'expo-location';
 import TimePicker from "../../components/AppTimePicker";
 import { KeyboardAvoidingView, Platform, FlatList } from 'react-native';
 
-const AddClass = () => {
+const AddClass = ({ route }) => {
     const navigation = useNavigation();
+    const { classDetails } = route.params || {}; 
+
+    
     const [streamDetails, setStreamDetails] = useState({
-        stream: "",
+        stream: classDetails?.stream || "", 
         open: "",
         items: Streams
     });
     const [subjectDetails, setSubjectDetails] = useState({
-        subject: "",
+        subject: classDetails?.subject || "",
         open: "",
         items: Subjects
     });
     const [classDateDetails, setClassDateDetails] = useState({
-        classDate: "",
+        classDate: classDetails?.classDate || "",
         open: "",
         items: WeekDays
     });
+    const [latitude, setLatitude] = useState(classDetails?.latitude || 0.0);
+    const [longitude, setLongitude] = useState(classDetails?.longitude || 0.0);
+    const [selectedLocation, setSelectedLocation] = useState(classDetails ? { latitude: classDetails.latitude, longitude: classDetails.longitude } : null);
+    const [region, setRegion] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [startTime, setStartTime] = useState(classDetails ? new Date(classDetails.startTime.seconds * 1000) : new Date());
+    const [endTime, setEndTime] = useState(classDetails ? new Date(classDetails.endTime.seconds * 1000) : new Date());
+    const [teacher, setTeacher] = useState(classDetails?.teacher || '');
 
     const handleChange = (detailType, field, value) => {
         if (detailType === "stream") {
@@ -49,16 +59,7 @@ const AddClass = () => {
             }));
         }
     };
-
-    const [latitude, setLatitude] = useState(0.0);
-    const [longitude, setLongitude] = useState(0.0);
-    const [selectedLocation, setSelectedLocation] = useState(null);
-    const [region, setRegion] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [startTime, setStartTime] = useState(new Date());
-    const [endTime, setEndTime] = useState(new Date());
-    const [teacher, setTeacher] = useState('');
-
+    
     const getCurrentLocation = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
@@ -93,26 +94,60 @@ const AddClass = () => {
         return <ActivityIndicator size="large" color="#0000ff" />;
     }
 
-    const handleRegister = () => {
-
-        addDoc(collection(DB, "classes"), {
-            stream: streamDetails.stream,
-            subject: subjectDetails.subject,
-            classDate: classDateDetails.classDate,
-            startTime: startTime,
-            endTime: endTime,
-            teacher: teacher,
-            longitude: longitude,
-            latitude: latitude
-        })
-            .then(() => {
-                console.log('Data added');
-                //navigation.navigate('Login');
+    
+    const handleSave = () => {
+        if (classDetails) {
+            
+            const classRef = doc(DB, "classes", classDetails.id);
+            updateDoc(classRef, {
+                stream: streamDetails.stream,
+                subject: subjectDetails.subject,
+                classDate: classDateDetails.classDate,
+                startTime: startTime,
+                endTime: endTime,
+                teacher: teacher,
+                longitude: longitude,
+                latitude: latitude
             })
-            .catch((error) => {
-                console.log(error);
-            });
+                .then(() => {
+                    console.log('Class updated successfully');
+                    navigation.navigate('Home');
+                })
+                .catch((error) => {
+                    console.log('Error updating class:', error);
+                });
+        } else {
+            
+            const q = query(collection(DB, "classes"));
+            getDocs(q)
+                .then((querySnapshot) => {
+                    const size = querySnapshot.empty ? 0 : querySnapshot.size;
+                    const paddedNumber = (size + 1).toString().padStart(4, '0');
+                    var classId = `C${paddedNumber}`;
 
+                    addDoc(collection(DB, "classes"), {
+                        id: classId,
+                        stream: streamDetails.stream,
+                        subject: subjectDetails.subject,
+                        classDate: classDateDetails.classDate,
+                        startTime: startTime,
+                        endTime: endTime,
+                        teacher: teacher,
+                        longitude: longitude,
+                        latitude: latitude
+                    })
+                        .then(() => {
+                            console.log('Class added successfully');
+                            navigation.navigate('Home');
+                        })
+                        .catch((error) => {
+                            console.log('Error adding class:', error);
+                        });
+                })
+                .catch((error) => {
+                    console.log('Error fetching class data:', error);
+                });
+        }
     };
 
     return (
@@ -124,89 +159,88 @@ const AddClass = () => {
                 data={[]}
                 ListHeaderComponent={
                     <>
-                     <View style={styles.pickerContainer1}>
-                        <AppText>A/L Stream:</AppText>
-                        <DropDownPicker
-                            open={streamDetails.open}
-                            value={streamDetails.stream}
-                            items={streamDetails.items}
-                            setOpen={() => handleChange("stream", "open", !streamDetails.open)}
-                            setValue={(callback) => handleChange("stream", "stream", callback(streamDetails.stream))}
-                            setItems={(callback) => handleChange("stream", "items", callback(streamDetails.items))}
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
+                        <View style={styles.pickerContainer1}>
+                            <AppText>A/L Stream:</AppText>
+                            <DropDownPicker
+                                open={streamDetails.open}
+                                value={streamDetails.stream}
+                                items={streamDetails.items}
+                                setOpen={() => handleChange("stream", "open", !streamDetails.open)}
+                                setValue={(callback) => handleChange("stream", "stream", callback(streamDetails.stream))}
+                                setItems={(callback) => handleChange("stream", "items", callback(streamDetails.items))}
+                                style={styles.dropdown}
+                                dropDownContainerStyle={styles.dropdownContainer}
+                            />
+                        </View>
+
+                        <View style={styles.pickerContainer2}>
+                            <AppText>Subject:</AppText>
+                            <DropDownPicker
+                                open={subjectDetails.open}
+                                value={subjectDetails.subject}
+                                items={subjectDetails.items}
+                                setOpen={() => handleChange("subject", "open", !subjectDetails.open)}
+                                setValue={(callback) => handleChange("subject", "subject", callback(subjectDetails.subject))}
+                                setItems={(callback) => handleChange("subject", "items", callback(subjectDetails.items))}
+                                style={styles.dropdown}
+                                dropDownContainerStyle={styles.dropdownContainer}
+                            />
+                        </View>
+
+                        <View style={styles.pickerContainer3}>
+                            <AppText>Class Date:</AppText>
+                            <DropDownPicker
+                                open={classDateDetails.open}
+                                value={classDateDetails.classDate}
+                                items={classDateDetails.items}
+                                setOpen={() => handleChange("classDate", "open", !classDateDetails.open)}
+                                setValue={(callback) => handleChange("classDate", "classDate", callback(classDateDetails.classDate))}
+                                setItems={(callback) => handleChange("classDate", "items", callback(classDateDetails.items))}
+                                style={styles.dropdown}
+                                dropDownContainerStyle={styles.dropdownContainer}
+                            />
+                        </View>
+
+                        <AppText>Start Time:</AppText>
+                        <TimePicker time={startTime} onTimeChange={setStartTime} />
+
+                        <AppText>End Time:</AppText>
+                        <TimePicker time={endTime} onTimeChange={setEndTime} />
+
+                        <TextInput
+                            style={styles.input}
+                            label="Tution Master"
+                            value={teacher}
+                            onChangeText={setTeacher}
                         />
-                    </View>
-    
-                    <View style={styles.pickerContainer2}>
-                        <AppText>Subject:</AppText>
-                        <DropDownPicker
-                            open={subjectDetails.open}
-                            value={subjectDetails.subject}
-                            items={subjectDetails.items}
-                            setOpen={() => handleChange("subject", "open", !subjectDetails.open)}
-                            setValue={(callback) => handleChange("subject", "subject", callback(subjectDetails.subject))}
-                            setItems={(callback) => handleChange("subject", "items", callback(subjectDetails.items))}
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
-                        />
-                    </View>
-    
-                    <View style={styles.pickerContainer3}>
-                        <AppText>Class Date:</AppText>
-                        <DropDownPicker
-                            open={classDateDetails.open}
-                            value={classDateDetails.classDate}
-                            items={classDateDetails.items}
-                            setOpen={() => handleChange("classDate", "open", !classDateDetails.open)}
-                            setValue={(callback) => handleChange("classDate", "classDate", callback(classDateDetails.classDate))}
-                            setItems={(callback) => handleChange("classDate", "items", callback(classDateDetails.items))}
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
-                        />
-                    </View>
-    
-                    <AppText>Start Time:</AppText>
-                    <TimePicker time={startTime} onTimeChange={setStartTime} />
-    
-                    <AppText>End Time:</AppText>
-                    <TimePicker time={endTime} onTimeChange={setEndTime} />
-    
-                    <TextInput
-                        style={styles.input}
-                        label="Tution Master"
-                        value={teacher}
-                        onChangeText={setTeacher}
-                    />
-    
-                    <MapView
-                        style={styles.map}
-                        initialRegion={region}
-                        onLongPress={handleLongPress}
-                        showsUserLocation={true}
-                    >
-                        {selectedLocation && (
-                            <Marker coordinate={selectedLocation}>
-                                <Image
-                                    source={require('./../../assets/images/mapmark.png')}
-                                    style={{ width: 40, height: 40 }}
-                                    resizeMode="contain"
-                                />
-                            </Marker>
-                        )}
-                    </MapView>
-    
-                    <View style={styles.buttonContainer}>
-                        <Button mode="contained" onPress={handleRegister} style={styles.buttonStyle}>
-                            Add Class
-                        </Button>
-                    </View>
+
+                        <MapView
+                            style={styles.map}
+                            initialRegion={region}
+                            onLongPress={handleLongPress}
+                            showsUserLocation={true}
+                        >
+                            {selectedLocation && (
+                                <Marker coordinate={selectedLocation}>
+                                    <Image
+                                        source={require('./../../assets/images/mapmark.png')}
+                                        style={{ width: 40, height: 40 }}
+                                        resizeMode="contain"
+                                    />
+                                </Marker>
+                            )}
+                        </MapView>
+
+                        <View style={styles.buttonContainer}>
+                            <Button mode="contained" onPress={handleSave} style={styles.buttonStyle}>
+                                {classDetails ? "Update Class" : "Add Class"}
+                            </Button>
+                        </View>
                     </>
                 }
             />
         </KeyboardAvoidingView>
     );
-    
 };
 
 const styles = StyleSheet.create({
@@ -268,5 +302,6 @@ const styles = StyleSheet.create({
         height: 300,
     },
 });
+
 
 export default AddClass;

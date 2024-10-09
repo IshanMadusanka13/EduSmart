@@ -45,6 +45,7 @@ export default function LoginScreen() {
                 const userData = querySnapshot.docs[0].data();
                 setUser(userData);
                 console.log("User logged in:", userData);
+                navigation.navigate("Home");
             }
         }).catch((error) => {
             console.error("Error during login:", error);
