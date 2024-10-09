@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import { TextInput, Button } from 'react-native-paper';
 import { DB } from '../../utils/DBConnect';
-import { collection, addDoc } from 'firebase/firestore'; 
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'; 
 
 const ManagerRegister = () => {
 	const navigation = useNavigation();
@@ -22,14 +22,14 @@ const ManagerRegister = () => {
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [rePasswordVisible, setRePasswordVisible] = useState(false);
 
-	const handleChange = (field, value) => {
+	const handleChange = useCallback((field, value) => {
 		setRegisterDetails((prevDetails) => ({
 			...prevDetails,
 			[field]: value,
 		}));
 
 		validateField(field, value);
-	};
+	}, [registerDetails]);
 
 	const handleBackPress = () => {
 		console.log('Back button pressed');
@@ -70,6 +70,7 @@ const ManagerRegister = () => {
 			return;
 		}
 
+		// Validate required fields
 		if (!Institute_name || !city || !Address || !Email_Address || !Username || !Password || !Re_Password) {
 			Alert.alert('Error', 'Please fill in all required fields.');
 			return;
@@ -88,6 +89,23 @@ const ManagerRegister = () => {
 		}
 
 		try {
+
+			const managerRef = collection(DB, "managers");
+
+			const emailQuery = query(managerRef, where("Email_Address", "==", Email_Address));
+			const emailQuerySnapshot = await getDocs(emailQuery);
+			if (!emailQuerySnapshot.empty) {
+				Alert.alert('Error', 'This Email address is already registered.');
+				return;
+			}
+
+			const usernameQuery = query(managerRef, where("Username", "==", Username));
+			const usernameSnapshot = await getDocs(usernameQuery);
+			if (!usernameSnapshot.empty) {
+				Alert.alert('Error', 'Username is already taken.');
+				return;
+			}
+
 			const docRef = await addDoc(collection(DB, "managers"), {
 				Institute_name: Institute_name,
 				city: city,
