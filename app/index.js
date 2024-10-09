@@ -25,6 +25,10 @@ export default function App() {
       <Stack.Screen name="Launch" component={LaunchScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen name="StudentRegister" component={StudentRegister} options={{ title: 'Student Registration' }} />
+
+
+
+      {/* prasad added */}
       <Stack.Screen name="UserFeedback" component={UserFeedback} options={{ headerShown: false, }} />
       <Stack.Screen name="ManagerRegister" component={ManagerRegister} options={{ headerShown: false, }} />
       <Stack.Screen name="ManagerDashboard" component={ManagerDashboard} options={{ headerShown: false, }} />

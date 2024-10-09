@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert, ActivityIndicator } from 'react-native';
+import { Modal, View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import { TextInput, Button } from 'react-native-paper';
 import { DB } from '../../utils/DBConnect';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'; 
+import LottieView from 'lottie-react-native';
 
 const ManagerRegister = () => {
 	const navigation = useNavigation();
@@ -22,6 +23,7 @@ const ManagerRegister = () => {
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [rePasswordVisible, setRePasswordVisible] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [showAnimation, setShowAnimation] = useState(false);
 
 	const handleChange = useCallback((field, value) => {
 		setRegisterDetails((prevDetails) => ({
@@ -119,8 +121,12 @@ const ManagerRegister = () => {
 				createdAt: new Date(),
 			});
 
-			Alert.alert('Success', 'Manager registered successfully!');
-			navigation.navigate('Login');
+			setShowAnimation(true);
+
+			setTimeout(() => {
+				setShowAnimation(false);
+				navigation.navigate('Login');
+			}, 3000);
 		} catch (error) {
 			console.error("Error adding document: ", error);
 			Alert.alert('Error', 'Failed to register. Please try again.');
@@ -238,12 +244,34 @@ const ManagerRegister = () => {
 						</View>
 					</View>
 				</ScrollView>
+				{showAnimation && (
+					<Modal visible={showAnimation} transparent={true}>
+						<View style={styles.animationContainer}>
+							<LottieView
+								source={require('../../assets/animations/congratulations.json')} // Replace with your path
+								autoPlay
+								loop={false}
+								style={styles.animation}
+							/>
+						</View>
+					</Modal>
+				)}
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
 };
 
 const styles = StyleSheet.create({
+	animationContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+	},
+	animation: {
+		width: 500,
+		height: 500,
+	},
 
 	errorText: {
 		color: 'red',
