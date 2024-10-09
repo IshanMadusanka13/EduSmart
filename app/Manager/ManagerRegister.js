@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import { View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
 import { TextInput, Button } from 'react-native-paper';
@@ -21,6 +21,7 @@ const ManagerRegister = () => {
 	const [errors, setErrors] = useState({});
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [rePasswordVisible, setRePasswordVisible] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	const handleChange = useCallback((field, value) => {
 		setRegisterDetails((prevDetails) => ({
@@ -90,6 +91,8 @@ const ManagerRegister = () => {
 
 		try {
 
+			setLoading(true);
+
 			const managerRef = collection(DB, "managers");
 
 			const emailQuery = query(managerRef, where("Email_Address", "==", Email_Address));
@@ -121,6 +124,8 @@ const ManagerRegister = () => {
 		} catch (error) {
 			console.error("Error adding document: ", error);
 			Alert.alert('Error', 'Failed to register. Please try again.');
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -227,9 +232,9 @@ const ManagerRegister = () => {
 							{errors.Re_Password && <Text style={styles.errorText}>{errors.Re_Password}</Text>}
 						</View>
 						<View style={styles.formContainer}>
-						<Button mode="contained" onPress={handleRegister} style={styles.button}>
-							Register
-						</Button>
+							<Button mode="contained" onPress={handleRegister} disabled={loading} style={styles.button}>
+								{loading ? <ActivityIndicator size="small" color="#fff" /> : 'Register'}
+							</Button>
 						</View>
 					</View>
 				</ScrollView>
@@ -289,7 +294,7 @@ const styles = StyleSheet.create({
 
 	},
 	button: {
-		width: '60%',
+		width: '100%',
 		marginTop: 20,
 	},
 });

@@ -8,6 +8,7 @@ import { DB } from '../../utils/DBConnect';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
@@ -92,7 +93,7 @@ export default function LoginScreen() {
                         Login
                     </Button>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate('ManagerDashboard')} style={styles.registerContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('StudentRegister')} style={styles.registerContainer}>
                     <AppText>Don't have an account? <AppText style={styles.registerText}>Register</AppText></AppText>
                 </TouchableOpacity>
 
