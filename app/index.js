@@ -1,10 +1,10 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LaunchScreen from './LaunchScreen';
 import LoginScreen from './UserManagement/Login';
 import StudentRegister from './UserManagement/StudentRegister';
 import { UserProvider } from '../hooks/UserContext';
-import NearbyClassView from './ViewClasses/NearbyClassView';
+import NearbyClassView from './ClassManagement/NearbyClassView';
+import AddClass from './ClassManagement/AddClass';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,7 +25,8 @@ export default function App() {
         <Stack.Screen name="Launch" component={LaunchScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="StudentRegister" component={StudentRegister} options={{ title: 'Student Registration' }} />
-        <Stack.Screen name="NearbyClasses" component={NearbyClassView} options={{ headerShown: false }} />
+        <Stack.Screen name="NearbyClasses" component={NearbyClassView} options={{ title: 'Nearby Classes' }} />
+        <Stack.Screen name="AddClass" component={AddClass} options={{ title: 'Add Class' }} />
       </Stack.Navigator>
     </UserProvider>
   );
