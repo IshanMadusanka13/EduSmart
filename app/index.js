@@ -1,4 +1,3 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LaunchScreen from './LaunchScreen';
 import LoginScreen from './UserManagement/Login';
@@ -8,36 +7,49 @@ import ManagerRegister from './Manager/ManagerRegister';
 import ManagerDashboard from './Manager/ManageDashboard';
 import StudentManagement from './Manager/StudentsManagement';
 import TeachersManagement from './Manager/TeachersManagement';
-
+import { UserProvider } from '../hooks/UserContext';
+import NearbyClassView from './ClassManagement/NearbyClassView';
+import AddClass from './ClassManagement/AddClass';
+import HomeScreen from './homeScreen';
+import AttendenceMark from './AttendenceManagement/attendenceMark';
+import StudentAttend from './StudentManagement/studentAttend';
+import ParentNotification from './ParentManagement/parentNotification';
+import AttendanceReport from './AttendenceManagement/attendanceReport';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <Stack.Navigator initialRouteName='Launch'
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#7781FB',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Stack.Screen name="Launch" component={LaunchScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="StudentRegister" component={StudentRegister} options={{ title: 'Student Registration' }} />
+    <UserProvider>
+      <Stack.Navigator initialRouteName='Launch'
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#7781FB',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      >
+        <Stack.Screen name="Launch" component={LaunchScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="StudentRegister" component={StudentRegister} options={{ title: 'Student Registration' }} />
+        <Stack.Screen name="NearbyClasses" component={NearbyClassView} options={{ title: 'Nearby Classes' }} />
+        <Stack.Screen name="AddClass" component={AddClass} options={{ title: 'Add Class' }} />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'EduSmart Home' }} />
+        <Stack.Screen name="MarkAttendance" component={AttendenceMark} options={{ title: 'Mark Attendance' }} />
+        <Stack.Screen name="StudentAttend" component={StudentAttend} options={{ title: 'Scan Attendance' }} />
+        <Stack.Screen name="ParentNotification" component={ParentNotification} options={{ title: 'Parent Notifications' }} />
+        <Stack.Screen name="AttendanceReport" component={AttendanceReport} options={{ title: 'Attendance Report' }} />
 
-
-
-      {/* prasad added */}
-      <Stack.Screen name="UserFeedback" component={UserFeedback} options={{ headerShown: false, }} />
-      <Stack.Screen name="ManagerRegister" component={ManagerRegister} options={{ headerShown: false, }} />
-      <Stack.Screen name="ManagerDashboard" component={ManagerDashboard} options={{ headerShown: false, }} />
-      <Stack.Screen name="StudentManagement" component={StudentManagement} options={{ headerShown: false, }} />
-      <Stack.Screen name="TeachersManagement" component={TeachersManagement} options={{ headerShown: false, }} />
-
-    </Stack.Navigator>
+        {/* prasad added */}
+        <Stack.Screen name="UserFeedback" component={UserFeedback} options={{ headerShown: false, }} />
+        <Stack.Screen name="ManagerRegister" component={ManagerRegister} options={{ headerShown: false, }} />
+        <Stack.Screen name="ManagerDashboard" component={ManagerDashboard} options={{ headerShown: false, }} />
+        <Stack.Screen name="StudentManagement" component={StudentManagement} options={{ headerShown: false, }} />
+        <Stack.Screen name="TeachersManagement" component={TeachersManagement} options={{ headerShown: false, }} />
+      </Stack.Navigator>
+    </UserProvider>
   );
 }

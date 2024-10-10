@@ -4,15 +4,11 @@ import { AppView } from './../../components/AppView';
 import React, { useState } from "react";
 import { View, Image, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
-import { DB } from '../../utils/DBConnect';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
-
+    const { setUser } = useUser();
     const navigation = useNavigation();
 
 
@@ -28,6 +24,32 @@ export default function LoginScreen() {
             ...prevDetails,
             [field]: value,
         }));
+        
+    };
+
+    const handleLogin = () => {
+        const userRef = collection(DB, "user");
+
+        console.log("Login details:", loginDetails);
+
+        const q = query(
+            userRef,
+            where("email", "==", loginDetails.email),
+            where("password", "==", loginDetails.password)
+        );
+
+        getDocs(q).then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                console.error("Invalid email or password");
+            } else {
+                const userData = querySnapshot.docs[0].data();
+                setUser(userData);
+                console.log("User logged in:", userData);
+                navigation.navigate("Home");
+            }
+        }).catch((error) => {
+            console.error("Error during login:", error);
+        });
     };
 
     const handleLogin = async () => {
@@ -68,8 +90,11 @@ export default function LoginScreen() {
     return (
         <AppView style={styles.container}>
             <View style={styles.headerContainer}>
-                <AppText type='title'>EduSmart</AppText>
-                <AppText type='subtitle'>Login</AppText>
+                <AppText style={styles.header} type='title'>EduSmart</AppText>
+                
+            </View>
+            <View style={styles.titleContainer}>
+            <AppText style={styles.title} type='subtitle'>Login</AppText>
             </View>
             <View style={styles.formContainer}>
                 <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
@@ -89,18 +114,20 @@ export default function LoginScreen() {
                     mode="outlined"
                 />
                 <View style={styles.buttonContainer}>
-                    <Button mode="contained" onPress={handleLogin} style={styles.buttonStyle} loading={loading} disabled={loading}>
+                    <Button mode="contained" onPress={() => console.log('Pressed')} style={styles.buttonStyle}>
                         Login
                     </Button>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate('StudentRegister')} style={styles.registerContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.registerContainer}>
                     <AppText>Don't have an account? <AppText style={styles.registerText}>Register</AppText></AppText>
                 </TouchableOpacity>
 
             </View>
         </AppView>
     );
-} const styles = StyleSheet.create({
+}
+
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'flex-start',
@@ -109,9 +136,27 @@ export default function LoginScreen() {
     },
     headerContainer: {
         width: '100%',
-        paddingTop: height * 0.12,
+        paddingTop: height * 0.019,
         alignItems: 'center',
         marginBottom: height * 0.05,
+
+    },
+    titleContainer: {
+        width: '100%',
+        alignItems: 'left',
+        //marginBottom: height * 0.019,
+    },
+    header: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        color: '#674fa3',
+        
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#674fa3',
+        alignItems: 'left',
     },
     formContainer: {
         flex: 1,
@@ -126,7 +171,7 @@ export default function LoginScreen() {
     },
     input: {
         width: '100%',
-        marginBottom: 15,
+        marginBottom: 25,
         height: 50,
         borderColor: 'none',
         paddingHorizontal: 10,
@@ -145,7 +190,7 @@ export default function LoginScreen() {
         alignItems: 'center',
     },
     registerText: {
-        color: 'blue',
+        color: '#674fa3',
         fontWeight: 'bold',
     },
 });

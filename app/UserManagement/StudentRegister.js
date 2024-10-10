@@ -6,11 +6,9 @@ import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import DatePicker from '../../components/AppDatePicker';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { addDoc,collection } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { DB } from '../../utils/DBConnect';
-
-
-const { width, height } = Dimensions.get('window');
+import { UserTypes } from '../../constants/UserTypes';
 
 const StudentRegister = ({ }) => {
     const navigation = useNavigation();
@@ -29,24 +27,42 @@ const StudentRegister = ({ }) => {
     ]);
 
     const handleRegister = () => {
-        
-        console.log('Register:', { firstName, lastName, dateOfBirth, stream, email, password });
 
-        addDoc(collection(DB, "Student"), {
-            email: email,
-            firstName: firstName,
-            lastName: lastName,
-            dateOfBirth: dateOfBirth,
-            stream: stream,
-            password: password
-        })
-          .then(() => {
-            console.log('Data added');
-            navigation.navigate('index');
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+        const q = query(collection(DB, "user"), where("userType", "==", UserTypes.student));
+        getDocs(q)
+            .then((querySnapshot) => {
+                const firstLetter = UserTypes.student.charAt(0).toUpperCase();
+                const size = querySnapshot.empty ? 0 : querySnapshot.size;
+                const paddedNumber = (size + 1).toString().padStart(4, '0');
+                var studentId = `${firstLetter}${paddedNumber}`;
+
+                var student = {
+                    studentId: studentId,
+                    firstName: firstName,
+                    lastName: lastName,
+                    dateOfBirth: dateOfBirth,
+                    stream: stream,
+                }
+
+                addDoc(collection(DB, "user"), {
+                    email: email,
+                    password: password,
+                    userType: UserTypes.student,
+                    user: student
+                })
+                    .then(() => {
+                        console.log('Data added');
+                        navigation.navigate('Login');
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+
+            })
+            .catch((error) => {
+                console.log(error);
+                throw error;
+            });
 
     };
 
