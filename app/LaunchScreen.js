@@ -20,9 +20,9 @@ export default function LaunchScreen() {
                 <Button mode="contained" style={styles.buttonStyle} onPress={() => navigation.navigate('StudentRegister')}>
                     Register
                 </Button>
-                <Button mode="contained" style={styles.buttonStyle} onPress={() => navigation.navigate('UserFeedback')}>
+                {/* <Button mode="contained" style={styles.buttonStyle} onPress={() => navigation.navigate('UserFeedback')}>
                     Feedback
-                </Button>
+                </Button> */}
             </View>
         </AppView>
     );
