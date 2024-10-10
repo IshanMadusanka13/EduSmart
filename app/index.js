@@ -2,6 +2,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LaunchScreen from './LaunchScreen';
 import LoginScreen from './UserManagement/Login';
 import StudentRegister from './UserManagement/StudentRegister';
+import UserFeedback from './UserFeedback/UserFeedback';
+import ManagerRegister from './Manager/ManagerRegister';
+import ManagerDashboard from './Manager/ManageDashboard';
+import StudentManagement from './Manager/StudentsManagement';
+import TeachersManagement from './Manager/TeachersManagement';
 import { UserProvider } from '../hooks/UserContext';
 import NearbyClassView from './ClassManagement/NearbyClassView';
 import AddClass from './ClassManagement/AddClass';
@@ -33,10 +38,17 @@ export default function App() {
         <Stack.Screen name="NearbyClasses" component={NearbyClassView} options={{ title: 'Nearby Classes' }} />
         <Stack.Screen name="AddClass" component={AddClass} options={{ title: 'Add Class' }} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'EduSmart Home' }} />
-      <Stack.Screen name="MarkAttendance" component={AttendenceMark} options={{ title: 'Mark Attendance' }} />
-      <Stack.Screen name="StudentAttend" component={StudentAttend} options={{ title: 'Scan Attendance' }} />
-      <Stack.Screen name="ParentNotification" component={ParentNotification} options={{ title: 'Parent Notifications' }} />
-      <Stack.Screen name="AttendanceReport" component={AttendanceReport} options={{ title: 'Attendance Report' }} />
+        <Stack.Screen name="MarkAttendance" component={AttendenceMark} options={{ title: 'Mark Attendance' }} />
+        <Stack.Screen name="StudentAttend" component={StudentAttend} options={{ title: 'Scan Attendance' }} />
+        <Stack.Screen name="ParentNotification" component={ParentNotification} options={{ title: 'Parent Notifications' }} />
+        <Stack.Screen name="AttendanceReport" component={AttendanceReport} options={{ title: 'Attendance Report' }} />
+
+        {/* prasad added */}
+        <Stack.Screen name="UserFeedback" component={UserFeedback} options={{ headerShown: false, }} />
+        <Stack.Screen name="ManagerRegister" component={ManagerRegister} options={{ headerShown: false, }} />
+        <Stack.Screen name="ManagerDashboard" component={ManagerDashboard} options={{ headerShown: false, }} />
+        <Stack.Screen name="StudentManagement" component={StudentManagement} options={{ headerShown: false, }} />
+        <Stack.Screen name="TeachersManagement" component={TeachersManagement} options={{ headerShown: false, }} />
       </Stack.Navigator>
     </UserProvider>
   );

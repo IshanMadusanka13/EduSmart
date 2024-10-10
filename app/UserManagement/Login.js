@@ -2,11 +2,12 @@ import { useNavigation } from 'expo-router';
 import { AppText } from './../../components/AppText';
 import { AppView } from './../../components/AppView';
 import React, { useState } from "react";
-import { View, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Image, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { DB } from '../../utils/DBConnect';
 import { useUser } from '../../hooks/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,47 +20,80 @@ export default function LoginScreen() {
         password: "",
     });
 
+    const [loading, setLoading] = useState(false);
+
     const handleChange = (field, value) => {
         setLoginDetails((prevDetails) => ({
             ...prevDetails,
             [field]: value,
         }));
-        
     };
 
-    const handleLogin = () => {
-        const userRef = collection(DB, "user");
+    const handleLogin = async () => {
+        const { email, password } = loginDetails;
 
-        console.log("Login details:", loginDetails);
+        if (!email || !password) {
+            Alert.alert('Error', "Please enter both email and password.");
+            return;
+        }
 
-        const q = query(
-            userRef,
-            where("email", "==", loginDetails.email),
-            where("password", "==", loginDetails.password)
-        );
+        setLoading(true);
 
-        getDocs(q).then((querySnapshot) => {
-            if (querySnapshot.empty) {
-                console.error("Invalid email or password");
-            } else {
-                const userData = querySnapshot.docs[0].data();
+        try {
+            // Query Firestore for users table
+            const userRef = collection(DB, "user");
+            const qUser = query(
+                userRef,
+                where("email", "==", email),
+                where("password", "==", password)
+            );
+
+            const userSnapshot = await getDocs(qUser);
+
+            if (!userSnapshot.empty) {
+                const userData = userSnapshot.docs[0].data();
                 setUser(userData);
-                console.log("User logged in:", userData);
+                await AsyncStorage.setItem('userSession', JSON.stringify(userData));
                 navigation.navigate("Home");
+                return;
             }
-        }).catch((error) => {
-            console.error("Error during login:", error);
-        });
+
+            // Query Firestore for managers table
+            const managerRef = collection(DB, "managers");
+            const qManager = query(
+                managerRef,
+                where("Email_Address", "==", email),
+                where("Password", "==", password)
+            );
+
+            const managerSnapshot = await getDocs(qManager);
+
+            if (!managerSnapshot.empty) {
+                const managerData = managerSnapshot.docs[0].data();
+                const session = {
+                    email: managerData.Email_Address,
+                    timestamp: new Date().getTime(),
+                };
+                await AsyncStorage.setItem('userSession', JSON.stringify(session));
+                navigation.navigate('ManagerDashboard');
+            } else {
+                Alert.alert("Login Failed", "Invalid email or password.");
+            }
+        } catch (error) {
+            console.error("Error during login: ", error);
+            Alert.alert("Error", "Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <AppView style={styles.container}>
             <View style={styles.headerContainer}>
                 <AppText style={styles.header} type='title'>EduSmart</AppText>
-                
             </View>
             <View style={styles.titleContainer}>
-            <AppText style={styles.title} type='subtitle'>Login</AppText>
+                <AppText style={styles.title} type='subtitle'>Login</AppText>
             </View>
             <View style={styles.formContainer}>
                 <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
@@ -79,14 +113,13 @@ export default function LoginScreen() {
                     mode="outlined"
                 />
                 <View style={styles.buttonContainer}>
-                    <Button mode="contained" onPress={() => handleLogin()} style={styles.buttonStyle}>
+                    <Button mode="contained" onPress={() => handleLogin()} style={styles.buttonStyle} loading={loading} disabled={loading}>
                         Login
                     </Button>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.registerContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('StudentRegister')} style={styles.registerContainer}>
                     <AppText>Don't have an account? <AppText style={styles.registerText}>Register</AppText></AppText>
                 </TouchableOpacity>
-
             </View>
         </AppView>
     );
@@ -104,18 +137,15 @@ const styles = StyleSheet.create({
         paddingTop: height * 0.019,
         alignItems: 'center',
         marginBottom: height * 0.05,
-
     },
     titleContainer: {
         width: '100%',
         alignItems: 'left',
-        //marginBottom: height * 0.019,
     },
     header: {
         fontSize: 30,
         fontWeight: 'bold',
         color: '#674fa3',
-        
     },
     title: {
         fontSize: 24,

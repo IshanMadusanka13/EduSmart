@@ -10,7 +10,7 @@ import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { DB } from '../../utils/DBConnect';
 import { UserTypes } from '../../constants/UserTypes';
 
-const StudentRegister = () => {
+const StudentRegister = ({ }) => {
     const navigation = useNavigation();
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -66,6 +66,9 @@ const StudentRegister = () => {
 
     };
 
+    const hadleManagerRegister = () => {
+        navigation.navigate('ManagerRegister');
+    };
     return (
         <AppView style={styles.container}>
             <TextInput
@@ -120,6 +123,12 @@ const StudentRegister = () => {
                 <Button mode="contained" onPress={handleRegister} style={styles.buttonStyle}>
                     Register
                 </Button>
+            </View>
+            <View style={{ marginTop: 10 }}>
+                <Button onPress={hadleManagerRegister}>
+                    Manager Register
+                </Button>
+
             </View>
         </AppView>
     );
