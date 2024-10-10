@@ -10,13 +10,20 @@ export default function ParentNotification({ route }) {
   const { studentId } = route.params; 
   const [notifications, setNotifications] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  console.log('studentId:', studentId);
 
   useEffect(() => {
     const q = query(collection(DB, "StudentAttendance"), where("studentId", "==", studentId));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const notificationsList = [];
+      const uniqueKeys = new Set();
       querySnapshot.forEach((doc) => {
-        notificationsList.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        const key = `${data.class}-${data.teacher}-${data.timestamp}`;
+        if (!uniqueKeys.has(key)) {
+          uniqueKeys.add(key);
+          notificationsList.push({ id: doc.id, ...data });
+        }
       });
       setNotifications(notificationsList);
     });

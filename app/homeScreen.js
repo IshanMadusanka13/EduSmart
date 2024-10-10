@@ -58,18 +58,11 @@ const LoadHomeScreen = () => {
       case UserTypes.student:
         return (
           <View>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('MarkAttendance')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Mark Attendance</AppText>
-            </TouchableOpacity>
+            
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: Colors.light.primary }]}
-              onPress={() => navigation.navigate('StudentAttend')}
+              onPress={() => navigation.navigate('StudentAttend',{ studentId: typeUser.studentId })}
             >
               <Image style={styles.buttonIcon}
               />
@@ -119,6 +112,15 @@ const LoadHomeScreen = () => {
       case UserTypes.InstituteManager:
         return (
           <View>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.info }]}
+              onPress={() => navigation.navigate('MarkAttendance')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Mark Attendance</AppText>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[styles.button, { backgroundColor: Colors.light.info }]}
               onPress={() => navigation.navigate('AttendanceReport')}
