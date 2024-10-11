@@ -6,6 +6,8 @@ import { AppText } from '../components/AppText';
 import { Colors } from '../constants/Colors';
 import { useUser } from '../hooks/UserContext';
 import { UserTypes } from '../constants/UserTypes';
+import { DB } from '../utils/DBConnect';
+import { collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
