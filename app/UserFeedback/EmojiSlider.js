@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import Slider from "@react-native-community/slider";
 
-const EmojiSlider = () => {
+const EmojiSlider = ({ onRatingChange }) => {
   const emojiData = [
     {
       bwImageSource: require("../../assets/bwEmoji/BwWorst.png"),
@@ -31,11 +31,13 @@ const EmojiSlider = () => {
     },
   ];
 
-  const [selectedEmoji, setSelectedEmoji] = useState(0);
+  const [selectedEmoji, setSelectedEmoji] = useState(2);
   const [hoveredEmoji, setHoveredEmoji] = useState(null);
 
   const handleEmojiSliderChange = (value) => {
     setSelectedEmoji(value);
+    // Call the parent's function to pass the rating
+    onRatingChange(value + 1); // Add 1 because index starts from 0, but ratings are from 1 to 5
   };
 
   const handleEmojiHover = (index) => {
@@ -52,8 +54,6 @@ const EmojiSlider = () => {
               styles.emojiItem,
               hoveredEmoji === index && styles.hoveredEmojiItem,
             ]}
-            onMouseEnter={() => handleEmojiHover(index)}
-            onMouseLeave={() => handleEmojiHover(null)}
           >
             <Image
               style={[styles.emojiImage]}
@@ -89,7 +89,6 @@ const EmojiSlider = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   emojiContainer: {
     flexDirection: "row",
@@ -116,7 +115,7 @@ const styles = StyleSheet.create({
     color: "#7781FB",
   },
   slider: {
-    width: "96%",
+    width: "90%",
   },
 });
 

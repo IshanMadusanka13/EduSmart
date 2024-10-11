@@ -248,7 +248,7 @@ const ManagerRegister = () => {
 					<Modal visible={showAnimation} transparent={true}>
 						<View style={styles.animationContainer}>
 							<LottieView
-								source={require('../../assets/animations/congratulations.json')} // Replace with your path
+								source={require('../../assets/animations/done.json')} // Replace with your path
 								autoPlay
 								loop={false}
 								style={styles.animation}

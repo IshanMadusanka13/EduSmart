@@ -9,8 +9,10 @@ import { Button } from 'react-native-paper';
 const ClassDetails = ({ route }) => {
 
     const navigation = useNavigation();
-    const { classId } = route.params;
+    const { classId: passedClassId } = route.params;
+    const [classId, setClassId] = useState(passedClassId || null);
     const [classDetails, setClassDetails] = useState(null);
+
 
     // useEffect(() => {
     //     const fetchClassDetails = async () => {
@@ -37,6 +39,8 @@ const ClassDetails = ({ route }) => {
 
     useEffect(() => {
         const fetchClassId = async () => {
+            if (classId) return;
+
             try {
                 const classCollection = collection(DB, 'class');
                 const classSnapshot = await getDocs(classCollection);
@@ -58,7 +62,10 @@ const ClassDetails = ({ route }) => {
     // Fetch class details using the auto-generated ID
     useEffect(() => {
         const fetchClassDetails = async () => {
-            if (!classId) return; // Wait until classId is available
+            if (!classId) {
+                console.log('No classId provided');
+                return;
+            }
 
             try {
                 const docRef = doc(DB, 'class', classId); // Fetch document by auto-generated ID
@@ -107,11 +114,11 @@ const ClassDetails = ({ route }) => {
                     fontSize: 17,
                     textAlign: 'center',
                 }}>{classDetails.subject}</Text>
-
+                {/*
                 <Image
                     source={require("../../assets/images/SearchLesson/book.png")}
                     style= {styles.image}
-                ></Image>
+                ></Image> */}
 
                 <View style={{alignItems: 'center'}}>
                     <Text style={{
@@ -138,9 +145,9 @@ const ClassDetails = ({ route }) => {
                 </View>
 
                 <View style={styles.container1}>
-                    <Text style={styles.subTitle}>Batch: <span style={styles.subContent}>{classDetails.batch}</span></Text>
+                    <Text style={styles.subTitle}>Batch: <Text style={styles.subContent}>{classDetails.batch}</Text></Text>
 
-                    <Text style={styles.subTitle}>Location: <span style={{fontWeight: 'lighter'}}>{classDetails.institute}</span></Text>
+                    <Text style={styles.subTitle}>Location: <Text style={{ fontWeight: 'lighter' }}>{classDetails.institute}</Text></Text>
 
                     <Text style={{fontSize: 16, marginBottom: 5 }}>Current Lesson </Text>
 
@@ -184,10 +191,25 @@ const ClassDetails = ({ route }) => {
                                 marginHorizontal: 5
                             }}>Join class</Button>
 
-                            <Button mode='contained' style={{
-                                backgroundColor: '#7781FB',
-                                marginHorizontal: 5
-                            }}>Review</Button>
+                            <Button
+                                mode='contained'
+                                onPress={() => navigation.navigate('UserFeedback', {
+                                    classId: classDetails.classId, // Passing classId as a parameter
+                                    className: classDetails.className, // You can pass more details if needed
+                                    teacherId: classDetails.teacherId, // Example of additional parameter
+                                    subject: classDetails.subject,
+                                    instituteName: classDetails.instituteName,
+                                    currentLesson: classDetails.currentLesson,
+
+                                })}
+                                style={{
+                                    backgroundColor: '#7781FB',
+                                    marginHorizontal: 5
+                                }}
+                            >
+                                Review
+                            </Button>
+
 
                             <Button mode='contained' onPress={() => navigation.goBack()} style={{
                                 backgroundColor: '#A9A0AB',
