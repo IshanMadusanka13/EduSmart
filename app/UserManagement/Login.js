@@ -1,12 +1,15 @@
+import React, { useState } from 'react';
 import { useNavigation } from 'expo-router';
 import { AppText } from './../../components/AppText';
 import { AppView } from './../../components/AppView';
-import React, { useState } from "react";
-import { View, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { DB } from '../../utils/DBConnect';
 import { useUser } from '../../hooks/UserContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../../constants/Colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,7 +27,6 @@ export default function LoginScreen() {
             ...prevDetails,
             [field]: value,
         }));
-        
     };
 
     const handleLogin = () => {
@@ -45,7 +47,7 @@ export default function LoginScreen() {
                 const userData = querySnapshot.docs[0].data();
                 setUser(userData);
                 console.log("User logged in:", userData);
-                navigation.navigate("Home");
+                navigation.navigate("MainTabs");
             }
         }).catch((error) => {
             console.error("Error during login:", error);
@@ -53,109 +55,96 @@ export default function LoginScreen() {
     };
 
     return (
-        <AppView style={styles.container}>
-            <View style={styles.headerContainer}>
-                <AppText style={styles.header} type='title'>EduSmart</AppText>
-                
-            </View>
-            <View style={styles.titleContainer}>
-            <AppText style={styles.title} type='subtitle'>Login</AppText>
-            </View>
-            <View style={styles.formContainer}>
-                <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
-                <TextInput
-                    label="Email"
-                    value={loginDetails.email}
-                    onChangeText={text => handleChange('email', text)}
-                    style={styles.input}
-                    mode="outlined"
-                />
-                <TextInput
-                    label="Password"
-                    value={loginDetails.password}
-                    onChangeText={text => handleChange('password', text)}
-                    secureTextEntry
-                    style={styles.input}
-                    mode="outlined"
-                />
-                <View style={styles.buttonContainer}>
-                    <Button mode="contained" onPress={() => handleLogin()} style={styles.buttonStyle}>
-                        Login
-                    </Button>
+        <ScrollView style={styles.scrollView}>
+            <LinearGradient
+                colors={[Colors.light.primary, Colors.light.accent]}
+                style={styles.header}
+            >
+                <Ionicons name="school-outline" size={60} color="white" />
+                <AppText style={styles.headerText}>Welcome to EduSmart</AppText>
+            </LinearGradient>
+            <AppView style={styles.container}>
+                <View style={styles.formSection}>
+                    <AppText style={styles.sectionTitle}>Login</AppText>
+                    <TextInput
+                        style={styles.input}
+                        label="Email"
+                        value={loginDetails.email}
+                        onChangeText={text => handleChange('email', text)}
+                        keyboardType="email-address"
+                        left={<TextInput.Icon icon="email" />}
+                    />
+                    <TextInput
+                        style={styles.input}
+                        label="Password"
+                        value={loginDetails.password}
+                        onChangeText={text => handleChange('password', text)}
+                        secureTextEntry
+                        left={<TextInput.Icon icon="lock" />}
+                    />
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.registerContainer}>
-                    <AppText>Don't have an account? <AppText style={styles.registerText}>Register</AppText></AppText>
-                </TouchableOpacity>
 
-            </View>
-        </AppView>
+                <Button mode="contained" onPress={handleLogin} style={styles.button}>
+                    Login
+                </Button>
+                <TouchableOpacity onPress={() => navigation.navigate('StudentRegister')} style={styles.registerLink}>
+                    <AppText style={styles.registerText}>Don't have an account? Register</AppText>
+                </TouchableOpacity>
+            </AppView>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    scrollView: {
         flex: 1,
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    headerContainer: {
-        width: '100%',
-        paddingTop: height * 0.019,
-        alignItems: 'center',
-        marginBottom: height * 0.05,
-
-    },
-    titleContainer: {
-        width: '100%',
-        alignItems: 'left',
-        //marginBottom: height * 0.019,
+        backgroundColor: Colors.light.background,
     },
     header: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: '#674fa3',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: height * 0.35,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
         
     },
-    title: {
+    headerText: {
+        fontSize: 25,
+        fontWeight: 'bold',
+        color: 'white',
+        marginTop: 15,
+        textAlign: 'center',
+    },
+    container: {
+        flex: 1,
+        padding: 30,
+    },
+    formSection: {
+        marginBottom: 50,
+    },
+    sectionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#674fa3',
-        alignItems: 'left',
-    },
-    formContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-    },
-    logo: {
-        width: width * 0.5,
-        height: width * 0.5,
-        marginBottom: 40,
+        color: Colors.light.primary,
+        marginTop: 30,
+        marginBottom: 30,
+        textAlign: 'center',
     },
     input: {
-        width: '100%',
-        marginBottom: 25,
-        height: 50,
-        borderColor: 'none',
-        paddingHorizontal: 10,
+        marginBottom: 15,
         backgroundColor: 'white',
     },
-    buttonContainer: {
-        width: '100%',
-        marginTop: 20,
+    button: {
+        marginTop: 50,
+        paddingVertical: 8,
+        backgroundColor: Colors.light.primary,
     },
-    buttonStyle: {
-        height: 50,
-        justifyContent: 'center',
-    },
-    registerContainer: {
-        marginTop: 20,
+    registerLink: {
+        marginTop: 15,
         alignItems: 'center',
     },
     registerText: {
-        color: '#674fa3',
-        fontWeight: 'bold',
+        color: Colors.light.primary,
+        fontSize: 16,
     },
 });
