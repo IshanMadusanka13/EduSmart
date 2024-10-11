@@ -37,7 +37,7 @@ const ManageDashboard = () => {
 
 	const fetchTeacherCount = async () => {
 		const db = getFirestore();
-		const querySnapshot = await getDocs(collection(db, "teachers"));
+		const querySnapshot = await getDocs(collection(db, "user"));
 		setTeacherCount(querySnapshot.size);
 	};
 
@@ -98,7 +98,7 @@ const ManageDashboard = () => {
 				<Text style={styles.headerTitle}>Dashboard</Text>
 				<TouchableOpacity onPress={handleImagePress}>
 					<Image
-						source={require('../../assets/images/icon.png')}
+						source={require('../../assets/images/user.png')}
 						style={styles.userImage}
 					/>
 				</TouchableOpacity>
@@ -129,7 +129,7 @@ const ManageDashboard = () => {
 						<Card.Content>
 							<Text style={styles.cardContentText}>{teacherCount}</Text>
 						</Card.Content>
-						<TouchableOpacity onPress={handleImagePress} style={styles.cardImageButton2}>
+						<TouchableOpacity onPress={() => navigation.navigate('')} style={styles.cardImageButton2}>
 							<AntDesign name="adduser" size={27} color="red" />
 						</TouchableOpacity>
 					</Card>
@@ -146,7 +146,7 @@ const ManageDashboard = () => {
 						<Card.Content>
 							<Text style={styles.cardContentText}>{studentCount}</Text>
 						</Card.Content>
-						<TouchableOpacity onPress={handleImagePress} style={styles.cardImageButton2}>
+						<TouchableOpacity onPress={() => navigation.navigate('AddStudents')} style={styles.cardImageButton2}>
 							<AntDesign name="adduser" size={27} color="red" />
 						</TouchableOpacity>
 					</Card>

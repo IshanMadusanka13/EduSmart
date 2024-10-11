@@ -81,7 +81,7 @@ const TeachersManagement = () => {
 				< Text style={styles.headerTitle} >View All Teachers </Text>
 				< TouchableOpacity onPress={handleImagePress} >
 					<Image
-						source={require('../../assets/images/icon.png')}
+						source={require('../../assets/images/user.png')}
 						style={styles.userImage}
 					/>
 				</TouchableOpacity>

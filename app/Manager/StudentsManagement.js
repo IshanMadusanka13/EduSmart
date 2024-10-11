@@ -1,4 +1,4 @@
-import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions, TextInput } from 'react-native';
+import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions, TextInput, FlatList } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
@@ -15,8 +15,13 @@ const StudentManagement = () => {
 	const [loading, setLoading] = useState(true);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
-	const [malePercentage, setMalePercentage] = useState(0);
-	const [femalePercentage, setFemalePercentage] = useState(0);
+	const [AlStreamCounts, setAlStreamCounts] = useState({
+		maths: 0,
+		science: 0,
+		art: 0,
+		tech: 0,
+	});
+	const [students, setStudents] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
 
 	const handleBackPress = () => {
@@ -36,26 +41,62 @@ const StudentManagement = () => {
 		navigation.goBack();
 	};
 
-	const fetchGenderData = async () => {
+	const fetchAlStreamData = async () => {
 		try {
 			const studentCollection = collection(DB, 'Student');
 			const querySnapshot = await getDocs(query(studentCollection));
-			let maleCount = 0;
-			let femaleCount = 0;
+			const counts = {
+				maths: 0,
+				science: 0,
+				art: 0,
+				tech: 0,
+			};
+
+
 			querySnapshot.forEach((doc) => {
 				const data = doc.data();
-				if (data.gender === 'male') {
-					maleCount++;
-				} else if (data.gender === 'female') {
-					femaleCount++;
+				// Assuming stream is stored in a field named 'stream'
+				switch (data.stream) {
+					case 'Maths':
+						counts.maths++;
+						break;
+					case 'Science':
+						counts.science++;
+						break;
+					case 'Art':
+						counts.art++;
+						break;
+					case 'Tech':
+						counts.tech++;
+						break;
+					default:
+						break;
 				}
 			});
 
-			const total = maleCount + femaleCount;
-			setMalePercentage((maleCount / total) * 100);
-			setFemalePercentage((femaleCount / total) * 100);
+			setAlStreamCounts(counts);
 		} catch (error) {
 			console.error('Error fetching gender data:', error);
+		}
+	};
+
+	const fetchStudents = async () => {
+		try {
+			const studentCollection = collection(DB, 'Student');
+			const querySnapshot = await getDocs(query(studentCollection));
+			const studentsArray = [];
+			querySnapshot.forEach((doc) => {
+				const data = doc.data();
+				studentsArray.push({
+					id: doc.id,
+					name: data.name,
+					email: data.email, // Assuming email is stored in Firestore
+					profileImage: data.imageUri,// profileImage: data.profileImage,
+				});
+			});
+			setStudents(studentsArray);
+		} catch (error) {
+			console.error('Error fetching students:', error);
 		}
 	};
 
@@ -65,24 +106,21 @@ const StudentManagement = () => {
 			if (session) {
 				const { timestamp } = JSON.parse(session);
 				const currentTime = new Date().getTime();
-
-				// Check if session is still valid (within 24 hours)
 				if (currentTime - timestamp <= sessionExpiryTime) {
-					setIsAuthenticated(true); // Session is valid
+					setIsAuthenticated(true); 
 				} else {
-					// Session expired, remove it and redirect to login
 					await AsyncStorage.removeItem('userSession');
 					navigation.navigate('LoginScreen');
 				}
 			} else {
-				// No session found, redirect to login
 				navigation.navigate('LoginScreen');
 			}
 			setLoading(false);
 		};
 
-		validateSession(); // Run session validation on mount
-		fetchGenderData();
+		validateSession();
+		fetchAlStreamData(); // Call the new fetch function
+		fetchStudents();
 	}, []);
 
 	if (loading) {
@@ -98,6 +136,15 @@ const StudentManagement = () => {
 		return null;
 	}
 
+	// Filter students based on the search query
+	const filteredStudents = students.filter(student => {
+		const queryLower = searchQuery.toLowerCase();
+		return (
+			(student.name && student.name.toLowerCase().includes(queryLower)) ||
+			(student.email && student.email.toLowerCase().includes(queryLower))
+		);
+	});
+
 	return (
 		<View>
 			<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
@@ -108,12 +155,12 @@ const StudentManagement = () => {
 				<Text style={styles.headerTitle}>View All Students</Text>
 				<TouchableOpacity onPress={handleImagePress}>
 					<Image
-						source={require('../../assets/images/icon.png')}
+						source={require('../../assets/images/user.png')}
 						style={styles.userImage}
 					/>
 				</TouchableOpacity>
 			</View>
-			<ScrollView>
+			<ScrollView style={styles.scrollView}>
 				{/* Dropdown */}
 				{dropdownVisible && (
 					<View style={styles.dropdown}>
@@ -125,22 +172,25 @@ const StudentManagement = () => {
 						</TouchableOpacity>
 					</View>
 				)}
-				{/* Gender Distribution Card */}
 				<Card style={styles.card}>
-					<Text style={styles.cardTitle}>Students Status</Text>
+					<Text style={styles.cardTitle}>Students by stream</Text>
 					<BarChart
 						data={{
-							labels: ['Male', 'Female'],
+							labels: ['Maths', 'Science', 'Art', 'Tech'],
 							datasets: [
 								{
-									data: [malePercentage, femalePercentage],
+									data: [
+										AlStreamCounts.maths,
+										AlStreamCounts.science,
+										AlStreamCounts.art,
+										AlStreamCounts.tech,
+									],
 									color: () => '#007BFF',
 								},
 							],
 						}}
-						width={Dimensions.get('window').width - 100}
+						width={Dimensions.get('window').width - 60}
 						height={220}
-						yAxisLabel="%"
 						chartConfig={{
 							backgroundColor: '#fff',
 							backgroundGradientFrom: '#fff',
@@ -149,24 +199,37 @@ const StudentManagement = () => {
 							style: {
 								borderRadius: 16,
 							},
-							// This will define the color for the y-axis
 							propsForBackgroundLines: {
-								strokeDasharray: "", // solid background lines with no dashes
-								strokeWidth: 1, // width of the background lines
-								stroke: "#e4e4e4", // color of the background lines
+								strokeDasharray: '',
+								strokeWidth: 1,
+								stroke: '#e4e4e4',
 							},
+
+
 						}}
 						style={{
 							marginVertical: 8,
 							borderRadius: 16,
 						}}
-						// Set the y-axis limits (0-100%)
 						withVerticalLabels={true}
 						withHorizontalLines={true}
 						verticalLabelRotation={30}
 						fromZero={true}
+						barPercentage={0.5} // Adjust this value for bar width
+						showValuesOnTopOfBars={true} // Show values on top of bars
+						// Calculate and set yAxis data
+						yAxisData={AlStreamCounts.maths > 0 || AlStreamCounts.science > 0 || AlStreamCounts.art > 0 || AlStreamCounts.tech > 0
+							? [
+								(AlStreamCounts.maths / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
+								(AlStreamCounts.science / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
+								(AlStreamCounts.art / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
+								(AlStreamCounts.tech / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
+							]
+							: [0, 0, 0, 0]} // Default to 0 if no students
 					/>
 				</Card>
+
+
 
 				{/* Search Bar */}
 				<View style={styles.searchContainer}>
@@ -178,53 +241,28 @@ const StudentManagement = () => {
 							onChangeText={setSearchQuery}
 						/>
 						{/* Add Student Button */}
-						<TouchableOpacity style={styles.addButton}>
+						<TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddStudents')}>
 							<FontAwesome name="plus" size={24} color="#fff" />
 						</TouchableOpacity>
 					</View>
 				</View>
 
-				{/* Square Card Buttons Row */}
-				<View style={styles.buttonRow}>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 1</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 2</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 3</Text>
-					</TouchableOpacity>
+				<View>
+				<FlatList
+					data={filteredStudents} // Use filtered students for rendering
+					renderItem={({ item }) => (
+						<TouchableOpacity style={styles.squareButton}>
+							<Image source={{ uri: item.profileImage }} style={styles.profileImage} />
+							<Text style={styles.buttonText}>{item.name.split(' ')[0]}</Text>
+						</TouchableOpacity>
+					)}
+					keyExtractor={item => item.id}
+					numColumns={3} // This ensures three cards per row
+					columnWrapperStyle={styles.buttonRow} // This aligns items in rows
+				/>
 				</View>
-
-				<View style={styles.buttonRow}>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 1</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 2</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 3</Text>
-					</TouchableOpacity>
-				</View>
-
-				<View style={styles.buttonRow}>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 1</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 2</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 3</Text>
-					</TouchableOpacity>
-				</View>
-
-
 			</ScrollView>
 		</View>
-
 	);
 }
 
@@ -250,52 +288,44 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 		fontSize: 20,
 		textAlign: 'center',
-		flex: 2,
-	},
-	backButton: {
-		position: 'flex',
-		left: 20,
+		flex: 1,
 	},
 	userImage: {
-		width: 35,
-		height: 35,
+		width: 40,
+		height: 40,
 		borderRadius: 20,
-		position: 'flex',
-		right: 20,
+		marginRight: 20,
+	},
+	scrollView: {
+		height: '150%',
+		marginBottom: 20,
 	},
 	dropdown: {
 		position: 'absolute',
-		top: 50,
-		right: 30,
+		top: 60,
+		right: 20,
 		backgroundColor: '#fff',
-		borderRadius: 8,
+		borderRadius: 10,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.3,
 		shadowRadius: 3,
 		elevation: 5,
-		zIndex: 1,
-		width: 100,
-		display: 'flex',
-		alignItems: 'center',
 	},
 	dropdownItem: {
 		padding: 10,
 	},
 	dropdownText: {
-		color: '#000',
-		fontSize: 16,
+		color: '#7781FB',
 	},
 	card: {
 		margin: 20,
-		padding: 20,
 		borderRadius: 10,
-		elevation: 3,
-		backgroundColor: '#fff',
+		padding: 10,
 		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.3,
-		shadowRadius: 3,
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 1,
 	},
 	cardTitle: {
 		fontSize: 18,
@@ -303,48 +333,55 @@ const styles = StyleSheet.create({
 		marginBottom: 10,
 	},
 	searchContainer: {
-		margin: 20,
-		paddingLeft: 10,
-	},
-	searchInput: {
-		height: 40,
-		borderColor: 'black',
-		borderWidth: 1,
-		borderRadius: 10,
-		paddingHorizontal: 10,
-		width: '80%',
-
+		paddingHorizontal: 20,
 	},
 	rowContainer: {
 		flexDirection: 'row',
+		alignItems: 'center',
 		justifyContent: 'space-between',
-	},
-	buttonRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		marginHorizontal: 20,
 		marginVertical: 10,
 	},
-	squareButton: {
+	searchInput: {
 		flex: 1,
-		height: 100, // Set a fixed height for square shape
-		backgroundColor: '#7781FB',
-		marginHorizontal: 5,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	buttonText: {
-		color: '#fff',
-		fontSize: 16,
+		borderColor: '#ccc',
+		borderWidth: 1,
+		borderRadius: 5,
+		padding: 10,
+		marginRight: 10,
 	},
 	addButton: {
 		backgroundColor: '#7781FB',
-		borderRadius: 10,
-		width: 40,
-		height: 40,
+		padding: 10,
+		borderRadius: 5,
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginLeft: 10,
+	},
+	squareButton: {
+		backgroundColor: '#fff',
+		height: 'fit-content',
+		width: 'fit-content',
+		margin: 10,
+		borderRadius: 10,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 1,
+		elevation: 2,
+	},
+	profileImage: {
+		width: 100,
+		height: 100,
+		borderRadius: 10,
+	},
+	buttonText: {
+		color: '#333',
+		fontWeight: 'bold',
+		textAlign: 'center',
+		zIndex: 1,
+
+	},
+	buttonRow: {
+		justifyContent: 'space-between',
 	},
 });

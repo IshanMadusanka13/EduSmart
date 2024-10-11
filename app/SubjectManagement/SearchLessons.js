@@ -115,7 +115,7 @@ const SearchLessons = () => {
                                         left: 410,
                                         marginRight: 8,
                                         fontSize: 18
-                                    }}><span style={{fontSize: 12}}>Batch</span>{item.batch}</Text>
+                                    }}><Text style={{ fontSize: 12 }}>Batch</Text>{item.batch}</Text>
                                 </View>
 
                                 <Button 
