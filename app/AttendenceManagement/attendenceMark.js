@@ -1,5 +1,5 @@
   import React, { useState } from 'react';
-  import { View, StyleSheet } from 'react-native';
+  import { View, StyleSheet, Alert } from 'react-native';
   import { Button, IconButton } from 'react-native-paper';
   import DropDownPicker from 'react-native-dropdown-picker';
   import QRCode from 'react-native-qrcode-svg';
@@ -61,6 +61,10 @@
         })
         .then((docRef) => {
           console.log('Attendance session created');
+          Alert.alert(
+            "Attendance session created"
+          );
+          
           setCurrentSessionId(docRef.id);
         })
         .catch((error) => {
@@ -79,6 +83,9 @@
         })
         .then(() => {
           console.log('Attendance session updated');
+          Alert.alert(
+            "Attendance session updated"
+          );
         })
         .catch((error) => {
           console.error('Error updating attendance session:', error);
@@ -91,6 +98,9 @@
         deleteDoc(doc(DB, "AttendanceSessions", currentSessionId))
         .then(() => {
           console.log('Attendance session deleted');
+          Alert.alert(
+            "Attendance session deleted"
+          );
           setCurrentSessionId(null);
           setQrValue('');
           // Clear selector values
