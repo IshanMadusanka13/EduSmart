@@ -1,4 +1,4 @@
-import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions, TextInput } from 'react-native';
+import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions, TextInput, FlatList } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ const StudentManagement = () => {
 	const [dropdownVisible, setDropdownVisible] = useState(false);
 	const [malePercentage, setMalePercentage] = useState(0);
 	const [femalePercentage, setFemalePercentage] = useState(0);
+	const [students, setStudents] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
 
 	const handleBackPress = () => {
@@ -59,6 +60,26 @@ const StudentManagement = () => {
 		}
 	};
 
+	const fetchStudents = async () => {
+		try {
+			const studentCollection = collection(DB, 'Student');
+			const querySnapshot = await getDocs(query(studentCollection));
+			const studentsArray = [];
+			querySnapshot.forEach((doc) => {
+				const data = doc.data();
+				studentsArray.push({
+					id: doc.id,
+					name: data.name,
+					email: data.email, // Assuming email is stored in Firestore
+					// profileImage: data.profileImage,
+				});
+			});
+			setStudents(studentsArray);
+		} catch (error) {
+			console.error('Error fetching students:', error);
+		}
+	};
+
 	useEffect(() => {
 		const validateSession = async () => {
 			const session = await AsyncStorage.getItem('userSession');
@@ -83,6 +104,7 @@ const StudentManagement = () => {
 
 		validateSession(); // Run session validation on mount
 		fetchGenderData();
+		fetchStudents();
 	}, []);
 
 	if (loading) {
@@ -98,6 +120,15 @@ const StudentManagement = () => {
 		return null;
 	}
 
+	// Filter students based on the search query
+	const filteredStudents = students.filter(student => {
+		const queryLower = searchQuery.toLowerCase();
+		return (
+			(student.name && student.name.toLowerCase().includes(queryLower)) ||
+			(student.email && student.email.toLowerCase().includes(queryLower))
+		);
+	});
+
 	return (
 		<View>
 			<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
@@ -108,7 +139,7 @@ const StudentManagement = () => {
 				<Text style={styles.headerTitle}>View All Students</Text>
 				<TouchableOpacity onPress={handleImagePress}>
 					<Image
-						source={require('../../assets/images/icon.png')}
+						source={require('../../assets/images/user.png')}
 						style={styles.userImage}
 					/>
 				</TouchableOpacity>
@@ -149,7 +180,6 @@ const StudentManagement = () => {
 							style: {
 								borderRadius: 16,
 							},
-							// This will define the color for the y-axis
 							propsForBackgroundLines: {
 								strokeDasharray: "", // solid background lines with no dashes
 								strokeWidth: 1, // width of the background lines
@@ -160,7 +190,6 @@ const StudentManagement = () => {
 							marginVertical: 8,
 							borderRadius: 16,
 						}}
-						// Set the y-axis limits (0-100%)
 						withVerticalLabels={true}
 						withHorizontalLines={true}
 						verticalLabelRotation={30}
@@ -184,47 +213,20 @@ const StudentManagement = () => {
 					</View>
 				</View>
 
-				{/* Square Card Buttons Row */}
-				<View style={styles.buttonRow}>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 1</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 2</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 3</Text>
-					</TouchableOpacity>
-				</View>
-
-				<View style={styles.buttonRow}>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 1</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 2</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 3</Text>
-					</TouchableOpacity>
-				</View>
-
-				<View style={styles.buttonRow}>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 1</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 2</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.squareButton}>
-						<Text style={styles.buttonText}>Button 3</Text>
-					</TouchableOpacity>
-				</View>
-
-
+				{/* Displaying Students */}
+				<FlatList
+					data={filteredStudents} // Use filtered students for rendering
+					renderItem={({ item }) => (
+						<TouchableOpacity style={styles.squareButton}>
+							<Text style={styles.buttonText}>{item.name.split(' ')[0]}</Text>
+						</TouchableOpacity>
+					)}
+					keyExtractor={item => item.id}
+					numColumns={3} // This ensures three cards per row
+					columnWrapperStyle={styles.buttonRow} // This aligns items in rows
+				/>
 			</ScrollView>
 		</View>
-
 	);
 }
 
@@ -250,52 +252,41 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 		fontSize: 20,
 		textAlign: 'center',
-		flex: 2,
-	},
-	backButton: {
-		position: 'flex',
-		left: 20,
+		flex: 1,
 	},
 	userImage: {
-		width: 35,
-		height: 35,
+		width: 40,
+		height: 40,
 		borderRadius: 20,
-		position: 'flex',
-		right: 20,
+		marginRight: 20,
 	},
 	dropdown: {
 		position: 'absolute',
-		top: 50,
-		right: 30,
+		top: 60,
+		right: 20,
 		backgroundColor: '#fff',
-		borderRadius: 8,
+		borderRadius: 10,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.3,
 		shadowRadius: 3,
 		elevation: 5,
-		zIndex: 1,
-		width: 100,
-		display: 'flex',
-		alignItems: 'center',
 	},
 	dropdownItem: {
 		padding: 10,
 	},
 	dropdownText: {
-		color: '#000',
-		fontSize: 16,
+		color: '#7781FB',
 	},
 	card: {
 		margin: 20,
-		padding: 20,
+		padding: 10,
 		borderRadius: 10,
-		elevation: 3,
-		backgroundColor: '#fff',
 		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.3,
-		shadowRadius: 3,
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 1,
+		elevation: 2,
 	},
 	cardTitle: {
 		fontSize: 18,
@@ -303,48 +294,49 @@ const styles = StyleSheet.create({
 		marginBottom: 10,
 	},
 	searchContainer: {
-		margin: 20,
-		paddingLeft: 10,
-	},
-	searchInput: {
-		height: 40,
-		borderColor: 'black',
-		borderWidth: 1,
-		borderRadius: 10,
-		paddingHorizontal: 10,
-		width: '80%',
-
+		paddingHorizontal: 20,
 	},
 	rowContainer: {
 		flexDirection: 'row',
+		alignItems: 'center',
 		justifyContent: 'space-between',
-	},
-	buttonRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		marginHorizontal: 20,
 		marginVertical: 10,
 	},
-	squareButton: {
+	searchInput: {
 		flex: 1,
-		height: 100, // Set a fixed height for square shape
-		backgroundColor: '#7781FB',
-		marginHorizontal: 5,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	buttonText: {
-		color: '#fff',
-		fontSize: 16,
+		borderColor: '#ccc',
+		borderWidth: 1,
+		borderRadius: 5,
+		padding: 10,
+		marginRight: 10,
 	},
 	addButton: {
 		backgroundColor: '#7781FB',
-		borderRadius: 10,
-		width: 40,
-		height: 40,
+		padding: 10,
+		borderRadius: 5,
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginLeft: 10,
+	},
+	squareButton: {
+		backgroundColor: '#7781FB',
+		height: 100,
+		width: 100,
+		padding: 20,
+		margin: 10,
+		borderRadius: 10,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 1,
+		elevation: 2,
+	},
+	buttonText: {
+		color: '#333',
+		fontWeight: 'bold',
+		textAlign: 'center',
+	},
+	buttonRow: {
+		justifyContent: 'space-between',
 	},
 });
