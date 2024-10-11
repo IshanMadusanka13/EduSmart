@@ -157,7 +157,12 @@ const LoadHomeScreen = () => {
                 onPress: () => navigation.navigate('AddClass'),
                 color: Colors.light.success
               },
-              
+              {
+                icon: 'location-outline',
+                text: 'Nearby Classes',
+                onPress: () => navigation.navigate('NearbyClasses'),
+                color: Colors.light.success
+              }
             ])}
           </>
         );
