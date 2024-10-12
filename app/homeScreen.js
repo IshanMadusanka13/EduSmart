@@ -20,37 +20,60 @@ export default function HomeScreen() {
     navigation.navigate('Login');
   };
 
-
   return (
-    <ScrollView>
-      <AppView style={styles.container}>
-        <View style={styles.header}>
-          <Image
-            source={require('../assets/images/icon.png')}
-            style={styles.logo}
-          />
-          <AppText type="title" style={styles.title}>EduSmart</AppText>
-        </View>
+    <ScrollView style={styles.scrollView}>
+      <LinearGradient
+        colors={[Colors.light.primary, Colors.light.accent]}
+        style={styles.header}
+      >
+        <Image
+          source={require('../assets/images/icon.png')}
+          style={styles.logo}
+        />
+        <AppText type="title" style={styles.title}>EduSmart</AppText>
+        <AppText style={styles.welcomeText}>Welcome, {user?.user.firstName}</AppText>
+      </LinearGradient>
 
+      <AppView style={styles.container}>
         <View style={styles.content}>
           <LoadHomeScreen />
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: Colors.light.info }]}
-            onPress={() => handleLogout()}
-          >
-            <Image style={styles.buttonIcon}
-            />
-            <AppText style={styles.buttonText}>Logout</AppText>
-          </TouchableOpacity>
         </View>
       </AppView>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Ionicons name="log-out-outline" size={24} color={Colors.light.text} />
+        <AppText style={styles.logoutText}>Logout</AppText>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const LoadHomeScreen = () => {
   const navigation = useNavigation();
-  const user = useUser();
+  const { user } = useUser();
+
+  const renderButton = (icon, text, onPress, color) => (
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: color }]}
+      onPress={onPress}
+    >
+      <Ionicons name={icon} size={32} color="white" />
+      <AppText style={styles.cardText}>{text}</AppText>
+    </TouchableOpacity>
+  );
+
+  const renderButtonRow = (buttons) => (
+    <View style={styles.buttonRow}>
+      {buttons.map((button, index) => (
+        <React.Fragment key={index}>
+          {renderButton(button.icon, button.text, button.onPress, button.color)}
+        </React.Fragment>
+      ))}
+    </View>
+  );
 
   if (!user) {
     navigation.navigate('Login');
@@ -226,50 +249,43 @@ const LoadHomeScreen = () => {
           </View>
         );
 
-      case UserTypes.teacher:
+          case UserTypes.teacher:
+          return (
+            <View></View>
+          );
+
+          case UserTypes.InstituteManager:
         return (
-          <View></View>
-        );
-
-      case UserTypes.InstituteManager:
-        return (
-          <View>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('MarkAttendance')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Mark Attendance</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('AttendanceReport')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Attendance Report</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('AddClass')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Add Classes</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('NearbyClasses')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
-            </TouchableOpacity>
-          </View>
+          <>
+            {renderButtonRow([
+              {
+                icon: 'checkmark-circle-outline',
+                text: 'Mark Attendance',
+                onPress: () => navigation.navigate('MarkAttendance'),
+                color: Colors.light.primary
+              },
+              {
+                icon: 'document-text-outline',
+                text: 'Attendance Report',
+                onPress: () => navigation.navigate('AttendanceReport'),
+                color: Colors.light.info
+              }
+            ])}
+            {renderButtonRow([
+              {
+                icon: 'add-circle-outline',
+                text: 'Add Classes',
+                onPress: () => navigation.navigate('AddClass'),
+                color: Colors.light.success
+              },
+              {
+                icon: 'location-outline',
+                text: 'Nearby Classes',
+                onPress: () => navigation.navigate('NearbyClasses'),
+                color: Colors.light.success
+              }
+            ])}
+          </>
         );
 
       default:
@@ -295,17 +311,23 @@ const chartConfig = {
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
   container: {
     flex: 1,
     padding: 20,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    padding: 40,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
     marginBottom: 10,
   },
   title: {
@@ -321,23 +343,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 20,
   },
-  button: {
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  card: {
+    width: '48%',
+    aspectRatio: 1,
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+  },
+  cardText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    width: '100%',
+    justifyContent: 'center',
+    padding: 15,
+    marginTop: 20,
+    marginBottom: 30,
   },
-  buttonIcon: {
-    width: 40,
-    height: 40,
-    marginRight: 15,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+  logoutText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: Colors.light.text,
   },
 });
