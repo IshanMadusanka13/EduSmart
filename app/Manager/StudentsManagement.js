@@ -255,7 +255,7 @@ const StudentManagement = () => {
 								}}
 								withVerticalLabels={true}
 								withHorizontalLines={true}
-								verticalLabelRotation={30}
+								verticalLabelRotation={15}
 								fromZero={true}
 								barPercentage={0.5}
 								showValuesOnTopOfBars={true}
@@ -307,7 +307,6 @@ const StudentManagement = () => {
 							onRefresh={handleRefresh}
 						/>
 					</View>
-
 				</Provider>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>

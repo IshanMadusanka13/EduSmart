@@ -65,8 +65,8 @@ const UserFeedback = () => {
 			if (feedbackDoc.exists()) {
 				// If classId exists, update the rating and other fields
 				await setDoc(feedbackDocRef, {
-					rating: selectedEmoji + 1, // Update the rating (adjust as per your logic)
-					totalRating: feedbackDoc.data().totalRating + selectedEmoji + 1, // Update total rating (example logic)
+					rating: selectedEmoji, // Update the rating (adjust as per your logic)
+					totalRating: feedbackDoc.data().totalRating + selectedEmoji, // Update total rating (example logic)
 					feedback: feedbackText, // Optional: update the feedback
 					teacherId: teacherId, // Optional: update teacher info
 				}, { merge: true }); // Merge: only update the specified fields without overwriting the document

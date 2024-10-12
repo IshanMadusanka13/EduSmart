@@ -179,9 +179,6 @@ const ManageDashboard = () => {
 						/>
 					</Card>
 				</View>
-
-
-
 			</ScrollView>
 
 		</View>
