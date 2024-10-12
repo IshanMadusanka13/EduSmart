@@ -9,10 +9,12 @@ import { UserTypes } from '../constants/UserTypes';
 import { DB } from '../utils/DBConnect';
 import { collection, getDocs } from 'firebase/firestore';
 import { BarChart } from 'react-native-chart-kit';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
 
 
   const handleLogout = () => {
@@ -20,36 +22,40 @@ export default function HomeScreen() {
     navigation.navigate('Login');
   };
 
-
   return (
-    <ScrollView>
-      <AppView style={styles.container}>
-        <View style={styles.header}>
-          <Image
-            source={require('../assets/images/icon.png')}
-            style={styles.logo}
-          />
-          <AppText type="title" style={styles.title}>EduSmart</AppText>
-        </View>
+    <ScrollView style={styles.scrollView}>
+      <LinearGradient
+        colors={[Colors.light.primary, Colors.light.accent]}
+        style={styles.header}
+      >
+        <Image
+          source={require('../assets/images/icon.png')}
+          style={styles.logo}
+        />
+        <AppText type="title" style={styles.title}>EduSmart</AppText>
+        <AppText style={styles.welcomeText}>Welcome, {user?.user.firstName}</AppText>
+      </LinearGradient>
 
+      <AppView style={styles.container}>
         <View style={styles.content}>
           <LoadHomeScreen />
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: Colors.light.info }]}
-            onPress={() => handleLogout()}
-          >
-            <Image style={styles.buttonIcon}
-            />
-            <AppText style={styles.buttonText}>Logout</AppText>
-          </TouchableOpacity>
         </View>
       </AppView>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Ionicons name="log-out-outline" size={24} color={Colors.light.text} />
+        <AppText style={styles.logoutText}>Logout</AppText>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const LoadHomeScreen = () => {
   const navigation = useNavigation();
+
   const user = useUser();
 
   if (!user) {
@@ -214,69 +220,129 @@ const LoadHomeScreen = () => {
               />
               <AppText style={styles.buttonText}>Parent Notifications</AppText>
             </TouchableOpacity>
+  const { user } = useUser();
 
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('NearbyClasses')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
-            </TouchableOpacity>
-          </View>
-        );
+  const renderButton = (icon, text, onPress, color) => (
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: color }]}
+      onPress={onPress}
+    >
+      <Ionicons name={icon} size={32} color="white" />
+      <AppText style={styles.cardText}>{text}</AppText>
+    </TouchableOpacity>
+  );
 
-      case UserTypes.teacher:
+  const renderButtonRow = (buttons) => (
+    <View style={styles.buttonRow}>
+      {buttons.map((button, index) => (
+        <React.Fragment key={index}>
+          {renderButton(button.icon, button.text, button.onPress, button.color)}
+        </React.Fragment>
+      ))}
+    </View>
+  );
+
+      if (!user) {
+        navigation.navigate('Login');
+      } else {
+        var typeUser = user?.user;
+    
+        switch (user?.userType) {
+          case UserTypes.student:
+            return (
+              <>
+                {renderButtonRow([
+                  {
+                    icon: 'qr-code-outline',
+                    text: 'Mark Attendance',
+                    onPress: () => navigation.navigate('StudentAttend', { studentId: typeUser.studentId }),
+                    color: Colors.light.primary
+                  },
+                  {
+                    icon: 'location-outline',
+                    text: 'Nearby Classes',
+                    onPress: () => navigation.navigate('NearbyClasses'),
+                    color: Colors.light.success
+                  }
+                ])}
+                {renderButtonRow([
+                 
+                  {
+                    icon: 'book-outline',
+                    text: 'Assignments',
+                    onPress: () => navigation.navigate('Assignments'),
+                    color: Colors.light.info
+                  }
+                ])}
+              </>
+            );
+
+            case UserTypes.parent:
+              return (
+                <>
+                  {renderButtonRow([
+                    {
+                      icon: 'notifications-outline',
+                      text: 'Parent Notifications',
+                      onPress: () => navigation.navigate('ParentNotification', { studentId: typeUser.studentId }),
+                      color: Colors.light.primary
+                    },
+                    {
+                      icon: 'location-outline',
+                      text: 'Nearby Classes',
+                      onPress: () => navigation.navigate('NearbyClasses'),
+                      color: Colors.light.success
+                    }
+                  ])}
+                </>
+              );
+
+          case UserTypes.teacher:
+          return (
+            <View></View>
+          );
+
+          case UserTypes.InstituteManager:
         return (
-          <View></View>
+          <>
+            {renderButtonRow([
+              {
+                icon: 'checkmark-circle-outline',
+                text: 'Mark Attendance',
+                onPress: () => navigation.navigate('MarkAttendance'),
+                color: Colors.light.primary
+              },
+              {
+                icon: 'document-text-outline',
+                text: 'Attendance Report',
+                onPress: () => navigation.navigate('AttendanceReport'),
+                color: Colors.light.info
+              }
+            ])}
+            {renderButtonRow([
+              {
+                icon: 'add-circle-outline',
+                text: 'Add Classes',
+                onPress: () => navigation.navigate('AddClass'),
+                color: Colors.light.success
+              },
+              {
+                icon: 'location-outline',
+                text: 'Nearby Classes',
+                onPress: () => navigation.navigate('NearbyClasses'),
+                color: Colors.light.success
+              }
+            ])}
+          </>
         );
 
-      case UserTypes.InstituteManager:
-        return (
-          <View>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('MarkAttendance')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Mark Attendance</AppText>
-            </TouchableOpacity>
+    
+        default:
+          return null;
+        }
+      }
+};
 
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('AttendanceReport')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Attendance Report</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('AddClass')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Add Classes</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('NearbyClasses')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
-            </TouchableOpacity>
-          </View>
-        );
-
-      default:
-        break;
-    }
-  }
-}
 
 const chartConfig = {
   backgroundGradientFrom: "#1E2923",
@@ -295,23 +361,34 @@ const chartConfig = {
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
   container: {
     flex: 1,
     padding: 20,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    padding: 40,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
     marginBottom: 10,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.light.primary,
+    color: 'white',
+  },
+  welcomeText: {
+    fontSize: 18,
+    color: 'white',
+    marginTop: 10,
   },
   chartContainer: {
     marginBottom: 40,
@@ -321,23 +398,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 20,
   },
-  button: {
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  card: {
+    width: '48%',
+    aspectRatio: 1,
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+  },
+  cardText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    width: '100%',
+    justifyContent: 'center',
+    padding: 15,
+    marginTop: 20,
+    marginBottom: 30,
   },
-  buttonIcon: {
-    width: 40,
-    height: 40,
-    marginRight: 15,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+  logoutText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: Colors.light.text,
   },
 });
