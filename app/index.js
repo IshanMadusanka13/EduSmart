@@ -27,6 +27,7 @@ import StudentAttend from './StudentManagement/studentAttend';
 import ParentNotification from './ParentManagement/parentNotification';
 import AttendanceReport from './AttendenceManagement/attendanceReport';
 import AddStudents from './Manager/AddStudents';
+import AddTeachers from './Manager/AddTeachers';
 
 
 const Stack = createNativeStackNavigator();
@@ -76,8 +77,9 @@ export default function App() {
         <Stack.Screen name="StudentManagement" component={StudentManagement} options={{ headerShown: false, }} />
         <Stack.Screen name="TeachersManagement" component={TeachersManagement} options={{ headerShown: false, }} />
         <Stack.Screen name="AddStudents" component={AddStudents} options={{ headerShown: false, }} />
-
+        <Stack.Screen name="AddTeachers" component={AddTeachers} options={{ headerShown: false, }} />
       </Stack.Navigator>
     </UserProvider>
   );
 }
+
