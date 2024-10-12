@@ -57,7 +57,7 @@ export default function LoginScreen() {
                 const userData = userSnapshot.docs[0].data();
                 setUser(userData);
                 await AsyncStorage.setItem('userSession', JSON.stringify(userData));
-                navigation.navigate("MainTabs");
+                navigation.navigate("Home");
                 return;
             }
 

@@ -29,6 +29,8 @@ import ParentNotification from './ParentManagement/parentNotification';
 import AttendanceReport from './AttendenceManagement/attendanceReport';
 import AddStudents from './Manager/AddStudents';
 import AddTeachers from './Manager/AddTeachers';
+import { Colors } from '../constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 const Stack = createNativeStackNavigator();
@@ -43,10 +45,8 @@ export default function App() {
             backgroundColor: Colors.light.accent,
           },
           headerTintColor: 'white',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
+          headerTitleStyle: { fontWeight: 'bold', },
+        })}
       >
 
         <Stack.Screen name="Launch" component={LaunchScreen} options={{ headerShown: false }} />
