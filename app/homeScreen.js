@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, ScrollView, Dimensions, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppView } from '../components/AppView';
 import { AppText } from '../components/AppText';
@@ -99,6 +99,7 @@ const LoadHomeScreen = () => {
 
             {/* Bar Chart */}
             <View style={styles.chartContainer}>
+              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
               <BarChart
                 data={chartData1}
                 width={Dimensions.get('window').width - 40} // Full width minus padding
@@ -183,6 +184,7 @@ const LoadHomeScreen = () => {
 
             {/* Bar Chart */}
             <View style={styles.chartContainer}>
+              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
               <BarChart
                 data={chartData1}
                 width={Dimensions.get('window').width - 40} // Full width minus padding
