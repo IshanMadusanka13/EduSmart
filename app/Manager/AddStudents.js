@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, Alert, ActivityIndicator, Image } from 'react-native';
+import { Modal, View, Text, StatusBar, StyleSheet, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, ActivityIndicator, Keyboard, Alert, Image } from 'react-native';
 import { TextInput, Button, Menu, Provider } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,27 +7,29 @@ import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { DB } from '../../utils/DBConnect';
 import { collection, addDoc } from 'firebase/firestore';
-
+import LottieView from 'lottie-react-native';
 
 const sessionExpiryTime = 24 * 60 * 60 * 1000;
 
 const AddStudents = () => {
 	const navigation = useNavigation();
-	const [loading, setLoading] = useState(true);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
 	const [passwordVisible, setPasswordVisible] = useState(false);
 	const [rePasswordVisible, setRePasswordVisible] = useState(false);
 
+	const [loading, setLoading] = useState(false);
+	const [showAnimation, setShowAnimation] = useState(false);
+
 	// State to manage form data
 	const [studentDetails, setStudentDetails] = useState({
 		name: '',
 		stream: '',
-		Contact: '',
-		Guardian: '',
-		Guardian_Contact: '',
-		Email: '',
-		Password: '',
+		contact: '',
+		guardian: '',
+		guardian_Contact: '',
+		email: '',
+		password: '',
 		Re_Password: '',
 
 	});
@@ -93,32 +95,44 @@ const AddStudents = () => {
 
 	const handleAddStudent = async () => {
 		try {
+
+			setLoading(true);
+
 			await addDoc(collection(DB, 'Student'), {
 				name: studentDetails.name,
 				stream: studentDetails.stream,
-				Contact: studentDetails.Contact,
-				Guardian: studentDetails.Guardian,
-				Guardian_Contact: studentDetails.Guardian_Contact,
-				Email: studentDetails.Email,
-				Password: studentDetails.Password,
+				contact: studentDetails.contact,
+				guardian: studentDetails.guardian,
+				guardian_Contact: studentDetails.guardian_Contact,
+				email: studentDetails.email,
+				password: studentDetails.password,
 				imageUri: imageUri, // Optionally include the image URI
 			});
 
-			Alert.alert("Success", "Student added successfully!");
+
 			setStudentDetails({
 				name: '',
 				stream: '',
-				Contact: '',
-				Guardian: '',
-				Guardian_Contact: '',
-				Email: '',
-				Password: '',
+				contact: '',
+				guardian: '',
+				guardian_Contact: '',
+				email: '',
+				password: '',
 				Re_Password: '',
 			});
 			setImageUri(null);
+
+			setShowAnimation(true);
+
+			setTimeout(() => {
+				setShowAnimation(false);
+			}, 3000);
+
 		} catch (error) {
 			console.error("Error adding student: ", error);
 			Alert.alert("Error", "Could not add student. Please try again.");
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -130,13 +144,7 @@ const AddStudents = () => {
 		closeMenu();
 	};
 
-	if (loading) {
-		return (
-			<View style={styles.loadingContainer}>
-				<ActivityIndicator size="large" color="#0000ff" />
-			</View>
-		);
-	}
+
 
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -189,39 +197,39 @@ const AddStudents = () => {
 								</Menu>
 
 								<TextInput
-									label="Contact"
-									value={studentDetails.Contact}
-									onChangeText={(text) => handleChange('Contact', text)}
+									label="contact"
+									value={studentDetails.contact}
+									onChangeText={(text) => handleChange('contact', text)}
 									style={styles.input}
 									mode="outlined"
 								/>
-								{errors.Contact && <Text style={styles.errorText}>{errors.Contact}</Text>}
+								{errors.contact && <Text style={styles.errorText}>{errors.contact}</Text>}
 								<TextInput
-									label="Guardian"
-									value={studentDetails.Guardian}
-									onChangeText={(text) => handleChange('Guardian', text)}
-									style={styles.input}
-									mode="outlined"
-								/>
-								<TextInput
-									label="Guardian Contact"
-									value={studentDetails.Guardian_Contact}
-									onChangeText={(text) => handleChange('Guardian_Contact', text)}
+									label="guardian"
+									value={studentDetails.guardian}
+									onChangeText={(text) => handleChange('guardian', text)}
 									style={styles.input}
 									mode="outlined"
 								/>
 								<TextInput
-									label="Email"
-									value={studentDetails.Email}
-									onChangeText={(text) => handleChange('Email', text)}
+									label="guardian contact"
+									value={studentDetails.guardian_Contact}
+									onChangeText={(text) => handleChange('guardian_Contact', text)}
+									style={styles.input}
+									mode="outlined"
+								/>
+								<TextInput
+									label="email"
+									value={studentDetails.email}
+									onChangeText={(text) => handleChange('email', text)}
 									style={styles.input}
 									mode="outlined"
 								/>
 
 								<TextInput
-									label="Password"
-									value={studentDetails.Password}
-									onChangeText={(text) => handleChange('Password', text)}
+									label="password"
+									value={studentDetails.password}
+									onChangeText={(text) => handleChange('password', text)}
 									secureTextEntry={!passwordVisible}
 									right={
 										<TextInput.Icon
@@ -232,9 +240,9 @@ const AddStudents = () => {
 									style={styles.input}
 									mode="outlined"
 								/>
-								{errors.Password && <Text style={styles.errorText}>{errors.Password}</Text>}
+								{errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 								<TextInput
-									label="Re-Password"
+									label="Re-password"
 									value={studentDetails.Re_Password}
 									onChangeText={(text) => handleChange('Re_Password', text)}
 									secureTextEntry={!rePasswordVisible}
@@ -249,12 +257,24 @@ const AddStudents = () => {
 								/>
 								{errors.Re_Password && <Text style={styles.errorText}>{errors.Re_Password}</Text>}
 
-				<Button mode="contained" onPress={handleAddStudent} style={styles.button}>
-					Add Student
+								<Button mode="contained" onPress={handleAddStudent} style={styles.button} disabled={loading}>
+									{loading ? <ActivityIndicator size="small" color="#fff" /> : 'Add Student'}
 				</Button>
 			</View>
 						</ScrollView>
 		</View>
+					{showAnimation && (
+						<Modal visible={showAnimation} transparent={true}>
+							<View style={styles.animationContainer}>
+								<LottieView
+									source={require('../../assets/animations/done.json')} // Replace with your path
+									autoPlay
+									loop={false}
+									style={styles.animation}
+								/>
+							</View>
+						</Modal>
+					)}
 				</Provider>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
@@ -334,6 +354,16 @@ const styles = StyleSheet.create({
 		height: 100,
 		marginTop: 10,
 		borderRadius: 10,
+	},
+	animationContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+	},
+	animation: {
+		width: 500,
+		height: 500,
 	},
 
 });

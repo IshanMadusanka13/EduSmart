@@ -140,6 +140,7 @@ const ManagerRegister = () => {
 			<KeyboardAvoidingView
 				style={{ flex: 1, backgroundColor: 'white' }}
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
 			>
 				<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
 				<View style={styles.header}>
@@ -324,6 +325,16 @@ const styles = StyleSheet.create({
 	button: {
 		width: '100%',
 		marginTop: 20,
+	},
+	animationContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+	},
+	animation: {
+		width: 400,
+		height: 400,
 	},
 });
 

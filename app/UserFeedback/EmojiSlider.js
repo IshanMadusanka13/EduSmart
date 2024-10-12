@@ -31,7 +31,7 @@ const EmojiSlider = ({ onRatingChange }) => {
     },
   ];
 
-  const [selectedEmoji, setSelectedEmoji] = useState(2);
+  const [selectedEmoji, setSelectedEmoji] = useState(0);
   const [hoveredEmoji, setHoveredEmoji] = useState(null);
 
   const handleEmojiSliderChange = (value) => {

@@ -116,7 +116,7 @@ const ManageDashboard = () => {
 			)}
 
 			{/* Cards Section */}
-			<ScrollView>
+			<ScrollView style={styles.ScrollView}>
 				<View style={styles.cardContainer}>
 					<Card style={styles.card} onPress={() => navigation.navigate('TeachersManagement')}>
 						<Card.Title
@@ -152,6 +152,33 @@ const ManageDashboard = () => {
 					</Card>
 				</View>
 
+				<View style={styles.cardContainer}>
+					<Card style={styles.card1} onPress={() => navigation.navigate('MarkAttendance')}>
+						<Card.Title
+							title="Mark Attendance"
+							titleStyle={styles.cardTitle1}
+							style={styles.cardTitleContainer}
+						/>
+					</Card>
+				</View>
+				<View style={styles.cardContainer}>
+					<Card style={styles.card2} onPress={() => navigation.navigate('AddClass')}>
+						<Card.Title
+							title="Add Classess"
+							titleStyle={styles.cardTitle1}
+							style={styles.cardTitleContainer}
+						/>
+					</Card>
+				</View>
+				<View style={styles.cardContainer}>
+					<Card style={styles.card3} onPress={() => navigation.navigate('AttendanceReport')}>
+						<Card.Title
+							title="Attendence Report"
+							titleStyle={styles.cardTitle1}
+							style={styles.cardTitleContainer}
+						/>
+					</Card>
+				</View>
 			</ScrollView>
 
 		</View>
@@ -224,6 +251,19 @@ const styles = StyleSheet.create({
 	},
 	card: {
 		width: '100%',
+		backgroundColor: '#fff',
+	},
+	card1: {
+		width: '100%',
+		backgroundColor: '#606cfc',
+	},
+	card2: {
+		width: '100%',
+		backgroundColor: '#60fc70',
+	},
+	card3: {
+		width: '100%',
+		backgroundColor: '#9263ff',
 	},
 	cardTitle: {
 		paddingTop: 10,
@@ -232,9 +272,14 @@ const styles = StyleSheet.create({
 		fontWeight: '700',
 
 	},
-	cardTitleContainer: {
-
+	cardTitle1: {
+		paddingTop: 10,
+		color: '#ffffff',
+		fontSize: 25,
+		fontWeight: '700',
+		textAlign: 'center',
 	},
+
 
 	cardContentText: {
 		color: 'Black',
@@ -264,6 +309,10 @@ const styles = StyleSheet.create({
 		height: 35,
 		borderRadius: 20,
 	},
+	ScrollView: {
+		height: '100%',
+	},
+
 
 
 })

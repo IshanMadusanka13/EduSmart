@@ -1,12 +1,14 @@
-import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions, TextInput, FlatList } from 'react-native';
+import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, Platform, Dimensions, TextInput, FlatList, KeyboardAvoidingView, RefreshControl, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
 import { BarChart } from 'react-native-chart-kit';
-import { Card } from 'react-native-paper';
+import { Card, Provider } from 'react-native-paper';
 import { DB } from '../../utils/DBConnect';
 import { collection, query, getDocs } from 'firebase/firestore';
+import StudentDetailsModal from './StudentDetailsModal ';
+import LottieView from 'lottie-react-native';
 
 const sessionExpiryTime = 24 * 60 * 60 * 1000;
 
@@ -14,6 +16,7 @@ const StudentManagement = () => {
 	const navigation = useNavigation();
 	const [loading, setLoading] = useState(true);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
 	const [AlStreamCounts, setAlStreamCounts] = useState({
 		maths: 0,
@@ -23,6 +26,8 @@ const StudentManagement = () => {
 	});
 	const [students, setStudents] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
+	const [selectedStudent, setSelectedStudent] = useState(null);
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const handleBackPress = () => {
 		navigation.goBack();
@@ -39,6 +44,12 @@ const StudentManagement = () => {
 
 	const handleProfile = () => {
 		navigation.goBack();
+	};
+
+	const onRefresh = async () => {
+		setRefreshing(true);
+		await fetchStudents();
+		setRefreshing(false);
 	};
 
 	const fetchAlStreamData = async () => {
@@ -90,7 +101,12 @@ const StudentManagement = () => {
 				studentsArray.push({
 					id: doc.id,
 					name: data.name,
-					email: data.email, // Assuming email is stored in Firestore
+					email: data.email,
+					contact: data.contact,
+					guardian: data.guardian,
+					guardianContact: data.guardian_Contact,
+					stream: data.stream,
+					password: data.password,
 					profileImage: data.imageUri,// profileImage: data.profileImage,
 				});
 			});
@@ -136,6 +152,16 @@ const StudentManagement = () => {
 		return null;
 	}
 
+	const handleStudentPress = (student) => {
+		setSelectedStudent(student);
+		setModalVisible(true);
+	};
+
+	const handleCloseModal = () => {
+		setModalVisible(false);
+		setSelectedStudent(null);
+	};
+
 	// Filter students based on the search query
 	const filteredStudents = students.filter(student => {
 		const queryLower = searchQuery.toLowerCase();
@@ -145,7 +171,27 @@ const StudentManagement = () => {
 		);
 	});
 
+	const handleStudentDelete = (studentId) => {
+		// Remove the deleted student from the list
+		setStudents(prevStudents => prevStudents.filter(student => student.id !== studentId));
+	};
+
+	const handleStudentUpdated = () => {
+		// Re-fetch the students to reflect updates
+		fetchStudents();
+	};
+
+	const handleRefresh = () => {
+		fetchStudents(); // Refresh the students list
+	};
+
 	return (
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+			<KeyboardAvoidingView
+				style={{ flex: 1, backgroundColor: 'white' }}
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+			>
+				<Provider>
 		<View>
 			<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
 			<View style={styles.header}>
@@ -154,116 +200,118 @@ const StudentManagement = () => {
 				</TouchableOpacity>
 				<Text style={styles.headerTitle}>View All Students</Text>
 				<TouchableOpacity onPress={handleImagePress}>
-					<Image
-						source={require('../../assets/images/user.png')}
-						style={styles.userImage}
-					/>
+								<Image source={require('../../assets/images/user.png')} style={styles.userImage} />
 				</TouchableOpacity>
 			</View>
-			<ScrollView style={styles.scrollView}>
-				{/* Dropdown */}
-				{dropdownVisible && (
-					<View style={styles.dropdown}>
-						<TouchableOpacity onPress={handleProfile} style={styles.dropdownItem}>
-							<Text style={styles.dropdownText}>Profile</Text>
-						</TouchableOpacity>
-						<TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
-							<Text style={styles.dropdownText}>Logout</Text>
-						</TouchableOpacity>
-					</View>
-				)}
-				<Card style={styles.card}>
-					<Text style={styles.cardTitle}>Students by stream</Text>
-					<BarChart
-						data={{
-							labels: ['Maths', 'Science', 'Art', 'Tech'],
-							datasets: [
-								{
-									data: [
-										AlStreamCounts.maths,
-										AlStreamCounts.science,
-										AlStreamCounts.art,
-										AlStreamCounts.tech,
+
+						{/* Dropdown */}
+						{dropdownVisible && (
+							<View style={styles.dropdown}>
+								<TouchableOpacity onPress={handleProfile} style={styles.dropdownItem}>
+									<Text style={styles.dropdownText}>Profile</Text>
+								</TouchableOpacity>
+								<TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
+									<Text style={styles.dropdownText}>Logout</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+
+						<Card style={styles.card}>
+							<Text style={styles.cardTitle}>Students by stream</Text>
+							<BarChart
+								data={{
+									labels: ['Maths', 'Science', 'Art', 'Tech'],
+									datasets: [
+										{
+											data: [
+												AlStreamCounts.maths,
+												AlStreamCounts.science,
+												AlStreamCounts.art,
+												AlStreamCounts.tech,
+											],
+											color: () => '#007BFF',
+										},
 									],
+								}}
+								width={Dimensions.get('window').width - 60}
+								height={220}
+								chartConfig={{
+									backgroundColor: '#fff',
+									backgroundGradientFrom: '#fff',
+									backgroundGradientTo: '#fff',
 									color: () => '#007BFF',
-								},
-							],
-						}}
-						width={Dimensions.get('window').width - 60}
-						height={220}
-						chartConfig={{
-							backgroundColor: '#fff',
-							backgroundGradientFrom: '#fff',
-							backgroundGradientTo: '#fff',
-							color: () => '#007BFF',
-							style: {
-								borderRadius: 16,
-							},
-							propsForBackgroundLines: {
-								strokeDasharray: '',
-								strokeWidth: 1,
-								stroke: '#e4e4e4',
-							},
+									style: {
+										borderRadius: 16,
+									},
+									propsForBackgroundLines: {
+										strokeDasharray: '',
+										strokeWidth: 1,
+										stroke: '#e4e4e4',
+									},
+								}}
+								style={{
+									marginVertical: 8,
+									borderRadius: 16,
+								}}
+								withVerticalLabels={true}
+								withHorizontalLines={true}
+								verticalLabelRotation={15}
+								fromZero={true}
+								barPercentage={0.5}
+								showValuesOnTopOfBars={true}
+							/>
+						</Card>
 
+						{/* Search Bar */}
+						<View style={styles.searchContainer}>
+							<View style={styles.rowContainer}>
+								<TextInput
+									style={styles.searchInput}
+									placeholder="Search Student..."
+									value={searchQuery}
+									onChangeText={setSearchQuery}
+								/>
+								{/* Add Student Button */}
+								<TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddStudents')}>
+									<FontAwesome name="plus" size={24} color="#fff" />
+								</TouchableOpacity>
+							</View>
+						</View>
 
-						}}
-						style={{
-							marginVertical: 8,
-							borderRadius: 16,
-						}}
-						withVerticalLabels={true}
-						withHorizontalLines={true}
-						verticalLabelRotation={30}
-						fromZero={true}
-						barPercentage={0.5} // Adjust this value for bar width
-						showValuesOnTopOfBars={true} // Show values on top of bars
-						// Calculate and set yAxis data
-						yAxisData={AlStreamCounts.maths > 0 || AlStreamCounts.science > 0 || AlStreamCounts.art > 0 || AlStreamCounts.tech > 0
-							? [
-								(AlStreamCounts.maths / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
-								(AlStreamCounts.science / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
-								(AlStreamCounts.art / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
-								(AlStreamCounts.tech / (AlStreamCounts.maths + AlStreamCounts.science + AlStreamCounts.art + AlStreamCounts.tech)) * 100,
-							]
-							: [0, 0, 0, 0]} // Default to 0 if no students
-					/>
-				</Card>
-
-
-
-				{/* Search Bar */}
-				<View style={styles.searchContainer}>
-					<View style={styles.rowContainer}>
-						<TextInput
-							style={styles.searchInput}
-							placeholder="Search Student..."
-							value={searchQuery}
-							onChangeText={setSearchQuery}
+						<FlatList style={styles.scrollView}
+							data={filteredStudents} // Use filtered students for rendering
+							renderItem={({ item }) => (
+								<TouchableOpacity style={styles.squareButton} onPress={() => {
+									setSelectedStudent(item);
+									setModalVisible(true);
+								}}>
+									<Image source={{ uri: item.profileImage }} style={styles.profileImage} />
+									<Text style={styles.buttonText}>{item.name.split(' ')[0]}</Text>
+								</TouchableOpacity>
+							)}
+							keyExtractor={item => item.id}
+							numColumns={3} // This ensures three cards per row
+							columnWrapperStyle={styles.buttonRow} // This aligns items in rows
+							refreshControl={
+								<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />  // Implement refresh control
+							}
 						/>
-						{/* Add Student Button */}
-						<TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddStudents')}>
-							<FontAwesome name="plus" size={24} color="#fff" />
-						</TouchableOpacity>
-					</View>
-				</View>
 
-				<View>
-				<FlatList
-					data={filteredStudents} // Use filtered students for rendering
-					renderItem={({ item }) => (
-						<TouchableOpacity style={styles.squareButton}>
-							<Image source={{ uri: item.profileImage }} style={styles.profileImage} />
-							<Text style={styles.buttonText}>{item.name.split(' ')[0]}</Text>
-						</TouchableOpacity>
-					)}
-					keyExtractor={item => item.id}
-					numColumns={3} // This ensures three cards per row
-					columnWrapperStyle={styles.buttonRow} // This aligns items in rows
-				/>
-				</View>
-			</ScrollView>
-		</View>
+						{/* Student Details Modal */}
+						<StudentDetailsModal
+							visible={modalVisible}
+							student={selectedStudent}
+							onClose={() => setModalVisible(false)}
+							onStudentDeleted={handleStudentDelete}
+							onStudentUpdated={handleStudentUpdated}
+							onRefresh={handleRefresh}
+						/>
+					</View>
+				</Provider>
+			</KeyboardAvoidingView>
+		</TouchableWithoutFeedback>
 	);
+
 }
 
 export default StudentManagement;
@@ -343,11 +391,12 @@ const styles = StyleSheet.create({
 	},
 	searchInput: {
 		flex: 1,
-		borderColor: '#ccc',
+		borderColor: '#000',
 		borderWidth: 1,
 		borderRadius: 5,
 		padding: 10,
 		marginRight: 10,
+		backgroundColor: '#fff',
 	},
 	addButton: {
 		backgroundColor: '#7781FB',
@@ -384,4 +433,6 @@ const styles = StyleSheet.create({
 	buttonRow: {
 		justifyContent: 'space-between',
 	},
+
+
 });
