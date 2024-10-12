@@ -6,11 +6,10 @@ import { AppText } from '../components/AppText';
 import { Colors } from '../constants/Colors';
 import { useUser } from '../hooks/UserContext';
 import { UserTypes } from '../constants/UserTypes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { DB } from '../utils/DBConnect';
 import { collection, getDocs } from 'firebase/firestore';
 import { BarChart } from 'react-native-chart-kit';
+>>>>>>>>> Temporary merge branch 2
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -54,7 +53,8 @@ export default function HomeScreen() {
 
 const LoadHomeScreen = () => {
   const navigation = useNavigation();
-  const { user } = useUser();
+
+  const user = useUser();
 
   const renderButton = (icon, text, onPress, color) => (
     <TouchableOpacity
@@ -76,157 +76,61 @@ const LoadHomeScreen = () => {
     </View>
   );
 
-  if (!user) {
-    navigation.navigate('Login');
-  } else {
-    var typeUser = user?.user;
-
-    switch (user?.userType) {
-      case UserTypes.student:
-
-        const [chartData, setChartData] = useState({
-          labels: [],
-          datasets: [{ data: [] }],
-        });
-
-        useEffect(() => {
-          // Fetch data from Firestore
-          const fetchChartData = async () => {
-            try {
-              const feedbackCollection = collection(DB, 'new_feedback');
-              const feedbackSnapshot = await getDocs(feedbackCollection);
-              const labels = [];
-              const data = [];
-
-              feedbackSnapshot.forEach(doc => {
-                const { totalRating, teacherId } = doc.data();
-                labels.push(teacherId); // Add teacherId to labels
-                data.push(totalRating); // Add totalRating to data
-              });
-
-              // Set chart data
-              setChartData({
-                labels,
-                datasets: [{ data }],
-              });
-            } catch (error) {
-              console.error("Error fetching chart data: ", error);
-            }
-          };
-
-          fetchChartData();
-        }, []);
-
-
-        return (
-          <>
-            {/* Check if chartData.datasets has valid data before rendering */}
-            {chartData.datasets[0].data.length > 0 ? (
-              <View style={styles.chartContainer}>
-                <Text style={styles.cardTitle}>Teachers Review Status Summary</Text>
-                <BarChart
-                  data={chartData}
-                  width={Dimensions.get('window').width - 40} // Full width minus padding
-                  height={250}
-                  chartConfig={{
-                    backgroundColor: '#fff',
-                    backgroundGradientFrom: '#fff',
-                    backgroundGradientTo: '#fff',
-                    color: () => '#007BFF',
-                    style: {
-                      borderRadius: 16,
-                    },
-                    propsForBackgroundLines: {
-                      strokeDasharray: '',
-                      strokeWidth: 1,
-                      stroke: '#e4e4e4',
-                    },
-                  }}
-                  verticalLabelRotation={10}
-                />
-              </View>
-            ) : (
-              <Text style={styles.loadingText}>Loading chart data...</Text>
-            )}
-          </>
-        );
-
-
-      case UserTypes.parent:
-        const [chartData1, setChartData1] = useState({
-          labels: [],
-          datasets: [{ data: [] }],
-        });
-
-        useEffect(() => {
-          const fetchChartData = async () => {
-            try {
-              const feedbackCollection = collection(DB, 'new_feedback');
-              const feedbackSnapshot = await getDocs(feedbackCollection);
-              const labels = [];
-              const data = [];
-
-              feedbackSnapshot.forEach(doc => {
-                const { totalRating, teacherId } = doc.data();
-                labels.push(teacherId); // Add teacherId to labels
-                data.push(totalRating); // Add totalRating to data
-              });
-
-              // Update the chartData state
-              setChartData({
-                labels,
-                datasets: [{ data }],
-              });
-            } catch (error) {
-              console.error("Error fetching chart data: ", error);
-            }
-          };
-
-          fetchChartData();
-        }, []);
-
-        return (
-          <>
-            {/* Bar Chart */}
-            <View style={styles.chartContainer}>
-              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
-              <BarChart
-                data={chartData1}
-                width={Dimensions.get('window').width - 40} // Full width minus padding
-                height={250}
-                chartConfig={{
-                  backgroundColor: '#fff',
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
-                  color: () => '#007BFF',
-                  style: {
-                    borderRadius: 16,
+<<<<<<<<< Temporary merge branch 1
+      if (!user) {
+        navigation.navigate('Login');
+      } else {
+        var typeUser = user?.user;
+    
+        switch (user?.userType) {
+          case UserTypes.student:
+            return (
+              <>
+                {renderButtonRow([
+                  {
+                    icon: 'qr-code-outline',
+                    text: 'Mark Attendance',
+                    onPress: () => navigation.navigate('StudentAttend', { studentId: typeUser.studentId }),
+                    color: Colors.light.primary
                   },
-                  propsForBackgroundLines: {
-                    strokeDasharray: '',
-                    strokeWidth: 1,
-                    stroke: '#e4e4e4',
-                  },
-                }}
-                verticalLabelRotation={10}
-              />
-            </View>
-            {renderButtonRow([
-              {
-                icon: 'notifications-outline',
-                text: 'Parent Notifications',
-                onPress: () => navigation.navigate('ParentNotification', { studentId: typeUser.studentId }),
-                color: Colors.light.primary
-              },
-              {
-                icon: 'location-outline',
-                text: 'Nearby Classes',
-                onPress: () => navigation.navigate('NearbyClasses'),
-                color: Colors.light.success
-              }
-            ])}
-          </>
-        );
+                  {
+                    icon: 'location-outline',
+                    text: 'Nearby Classes',
+                    onPress: () => navigation.navigate('NearbyClasses'),
+                    color: Colors.light.success
+                  }
+                ])}
+                {renderButtonRow([
+                 
+                  {
+                    icon: 'book-outline',
+                    text: 'Assignments',
+                    onPress: () => navigation.navigate('Assignments'),
+                    color: Colors.light.info
+                  }
+                ])}
+              </>
+            );
+
+            case UserTypes.parent:
+              return (
+                <>
+                  {renderButtonRow([
+                    {
+                      icon: 'notifications-outline',
+                      text: 'Parent Notifications',
+                      onPress: () => navigation.navigate('ParentNotification', { studentId: typeUser.studentId }),
+                      color: Colors.light.primary
+                    },
+                    {
+                      icon: 'location-outline',
+                      text: 'Nearby Classes',
+                      onPress: () => navigation.navigate('NearbyClasses'),
+                      color: Colors.light.success
+                    }
+                  ])}
+                </>
+              );
 
           case UserTypes.teacher:
           return (
@@ -265,15 +169,251 @@ const LoadHomeScreen = () => {
               }
             ])}
           </>
+=========
+      case UserTypes.student:
+
+        const [chartData, setChartData] = useState({
+          labels: [],
+          datasets: [{ data: [] }],
+        });
+
+        useEffect(() => {
+          // Fetch data from Firestore
+          const fetchChartData = async () => {
+            try {
+              const feedbackCollection = collection(DB, 'new_feedback');
+              const feedbackSnapshot = await getDocs(feedbackCollection);
+              const labels = [];
+              const data = [];
+
+              feedbackSnapshot.forEach(doc => {
+                const { totalRating, teacherId } = doc.data();
+                labels.push(teacherId); // Add teacherId to labels
+                data.push(totalRating); // Add totalRating to data
+              });
+
+              // Set chart data
+              setChartData({
+                labels,
+                datasets: [{ data }],
+              });
+            } catch (error) {
+              console.error("Error fetching chart data: ", error);
+            }
+          };
+
+          fetchChartData();
+        }, []);
+
+        return (
+          <View>
+
+            {/* Bar Chart */}
+            <View style={styles.chartContainer}>
+              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
+              <BarChart
+                data={chartData1}
+                width={Dimensions.get('window').width - 40} // Full width minus padding
+                height={250}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  color: () => '#007BFF',
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '',
+                    strokeWidth: 1,
+                    stroke: '#e4e4e4',
+                  },
+                }}
+                verticalLabelRotation={10}
+              />
+            </View>
+
+
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.primary }]}
+              onPress={() => navigation.navigate('StudentAttend',{ studentId: typeUser.studentId })}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Student Mark Attendance</AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('NearbyClasses')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
+            </TouchableOpacity>
+          </View>
+>>>>>>>>> Temporary merge branch 2
         );
 
-
-      default:
-        return null;
-    }
-  }
+    
+        default:
+          return null;
+        }
+      }
 };
 
+<<<<<<<<< Temporary merge branch 1
+=========
+      case UserTypes.parent:
+        const [chartData1, setChartData1] = useState({
+          labels: [],
+          datasets: [{ data: [] }],
+        });
+
+        useEffect(() => {
+          // Fetch data from Firestore
+          const fetchChartData = async () => {
+            try {
+              const feedbackCollection = collection(DB, 'new_feedback');
+              const feedbackSnapshot = await getDocs(feedbackCollection);
+              const labels = [];
+              const data = [];
+
+              feedbackSnapshot.forEach(doc => {
+                const { totalRating, teacherId } = doc.data();
+                labels.push(teacherId); // Add teacherId to labels
+                data.push(totalRating); // Add totalRating to data
+              });
+
+              // Set chart data
+              setChartData1({
+                labels,
+                datasets: [{ data }],
+              });
+            } catch (error) {
+              console.error("Error fetching chart data: ", error);
+            }
+          };
+
+          fetchChartData();
+        }, []);
+
+        return (
+          <View>
+
+            {/* Bar Chart */}
+            <View style={styles.chartContainer}>
+              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
+              <BarChart
+                data={chartData1}
+                width={Dimensions.get('window').width - 40} // Full width minus padding
+                height={250}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  color: () => '#007BFF',
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '',
+                    strokeWidth: 1,
+                    stroke: '#e4e4e4',
+                  },
+                }}
+                verticalLabelRotation={10}
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('ParentNotification', { studentId: typeUser.studentId })}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Parent Notifications</AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('NearbyClasses')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
+            </TouchableOpacity>
+          </View>
+        );
+
+      case UserTypes.teacher:
+        return (
+          <View></View>
+        );
+
+      case UserTypes.InstituteManager:
+        return (
+          <View>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.info }]}
+              onPress={() => navigation.navigate('MarkAttendance')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Mark Attendance</AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.info }]}
+              onPress={() => navigation.navigate('AttendanceReport')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Attendance Report</AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('AddClass')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Add Classes</AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('NearbyClasses')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
+            </TouchableOpacity>
+          </View>
+        );
+
+      default:
+        break;
+    }
+  }
+}
+>>>>>>>>> Temporary merge branch 2
+
+const chartConfig = {
+  backgroundGradientFrom: "#1E2923",
+  backgroundGradientTo: "#08130D",
+  decimalPlaces: 0, // Optional, defaults to 2dp
+  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  style: {
+    borderRadius: 16,
+  },
+  propsForDots: {
+    r: "6",
+    strokeWidth: "2",
+    stroke: "#ffa726",
+  },
+};
 
 const styles = StyleSheet.create({
   scrollView: {
