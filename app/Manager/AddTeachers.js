@@ -11,7 +11,7 @@ import LottieView from 'lottie-react-native';
 
 const sessionExpiryTime = 24 * 60 * 60 * 1000;
 
-const AddStudents = () => {
+const AddTeachers = () => {
 	const navigation = useNavigation();
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -22,13 +22,12 @@ const AddStudents = () => {
 	const [showAnimation, setShowAnimation] = useState(false);
 
 	// State to manage form data
-	const [studentDetails, setStudentDetails] = useState({
+	const [teacherDetails, setTeacherDetails] = useState({
 		name: '',
-		stream: '',
+		subject: '',
 		contact: '',
-		guardian: '',
-		guardian_Contact: '',
 		email: '',
+		username: '',
 		password: '',
 		Re_Password: '',
 
@@ -36,7 +35,7 @@ const AddStudents = () => {
 
 	const [imageUri, setImageUri] = useState(null);
 	const [menuVisible, setMenuVisible] = useState(false);
-	const streams = ['Maths', 'Science', 'Art', 'Tech'];
+	const streams = ['Maths', 'Bio', 'Physics', 'chemistry', 'ICT', 'Commerce'];
 	const [errors, setErrors] = useState({});
 
 	const handleBackPress = () => {
@@ -87,7 +86,7 @@ const AddStudents = () => {
 	}, []);
 
 	const handleChange = (field, value) => {
-		setStudentDetails((prevDetails) => ({
+		setTeacherDetails((prevDetails) => ({
 			...prevDetails,
 			[field]: value,
 		}));
@@ -95,86 +94,59 @@ const AddStudents = () => {
 
 	const validateForm = () => {
 		const newErrors = {};
-
-		if (!studentDetails.name.trim()) {
-			newErrors.name = 'Student name is required';
+		if (!teacherDetails.name) newErrors.name = 'Name is required.';
+		if (!teacherDetails.subject) newErrors.subject = 'Subject is required.';
+		if (!teacherDetails.contact) newErrors.contact = 'Contact is required.';
+		if (!teacherDetails.email) newErrors.email = 'Email is required.';
+		if (!teacherDetails.username) newErrors.username = 'Username is required.';
+		if (!teacherDetails.password) newErrors.password = 'Password is required.';
+		if (teacherDetails.password !== teacherDetails.Re_Password) {
+			newErrors.Re_Password = 'Passwords do not match.';
 		}
-
-		if (!studentDetails.stream.trim()) {
-			newErrors.stream = 'Please select a stream';
-		}
-
-		const phoneRegex = /^[0-9]{10}$/; // Assuming 10-digit phone numbers
-		if (!phoneRegex.test(studentDetails.contact)) {
-			newErrors.contact = 'Please enter a valid 10-digit contact number';
-		}
-
-		if (!phoneRegex.test(studentDetails.guardian_Contact)) {
-			newErrors.guardian_Contact = 'Please enter a valid 10-digit guardian contact number';
-		}
-
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(studentDetails.email)) {
-			newErrors.email = 'Please enter a valid email';
-		}
-
-		if (studentDetails.password.length < 6) {
-			newErrors.password = 'Password must be at least 6 characters';
-		}
-
-		if (studentDetails.password !== studentDetails.Re_Password) {
-			newErrors.Re_Password = 'Passwords do not match';
-		}
-
 		setErrors(newErrors);
-
-		// If the newErrors object is empty, it means validation passed
 		return Object.keys(newErrors).length === 0;
 	};
 
+	const resetForm = () => {
+		setTeacherDetails({
+			name: '',
+			subject: '',
+			contact: '',
+			email: '',
+			username: '',
+			password: '',
+			Re_Password: '',
+		});
+		setImageUri(null);
+	};
 
 
-	const handleAddStudent = async () => {
-		if (!validateForm()) {
-			return; // Do not proceed if validation fails
-		}
+	const handleAddTeachers = async () => {
+		if (!validateForm()) return; // Validate the form
 
 		try {
 			setLoading(true);
 
-			await addDoc(collection(DB, 'Student'), {
-				name: studentDetails.name,
-				stream: studentDetails.stream,
-				contact: studentDetails.contact,
-				guardian: studentDetails.guardian,
-				guardian_Contact: studentDetails.guardian_Contact,
-				email: studentDetails.email,
-				password: studentDetails.password,
+			await addDoc(collection(DB, 'Teacher'), {
+				name: teacherDetails.name,
+				subject: teacherDetails.subject,
+				contact: teacherDetails.contact,
+				email: teacherDetails.email,
+				username: teacherDetails.username,
+				password: teacherDetails.password,
 				imageUri: imageUri, // Optionally include the image URI
 			});
 
-			// Reset form after submission
-			setStudentDetails({
-				name: '',
-				stream: '',
-				contact: '',
-				guardian: '',
-				guardian_Contact: '',
-				email: '',
-				password: '',
-				Re_Password: '',
-			});
-			setImageUri(null);
-
+			resetForm(); // Reset form after submission
 			setShowAnimation(true);
 
 			setTimeout(() => {
 				setShowAnimation(false);
+				navigation.goBack(); // Navigate back after adding the teacher
 			}, 3000);
-
 		} catch (error) {
-			console.error("Error adding student: ", error);
-			Alert.alert("Error", "Could not add student. Please try again.");
+			console.error('Error adding teacher: ', error);
+			Alert.alert('Error', 'Could not add teacher. Please try again.');
 		} finally {
 			setLoading(false);
 		}
@@ -183,8 +155,8 @@ const AddStudents = () => {
 	const openMenu = () => setMenuVisible(true);
 	const closeMenu = () => setMenuVisible(false);
 
-	const handleStreamSelection = (stream) => {
-		handleChange('stream', stream);
+	const handleStreamSelection = (subject) => {
+		handleChange('subject', subject);
 		closeMenu();
 	};
 
@@ -197,24 +169,24 @@ const AddStudents = () => {
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 			>
 				<Provider>
-		<View style={styles.container}>
-			<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
+					<View style={styles.container}>
+						<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
 
-			<View style={styles.header}>
-				<Text style={styles.headerTitle}>Add Students</Text>
-				<TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-					<AntDesign name="arrowleft" size={24} color="#fff" />
-				</TouchableOpacity>
-			</View>
+						<View style={styles.header}>
+							<Text style={styles.headerTitle}>Add Teacher</Text>
+							<TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+								<AntDesign name="arrowleft" size={24} color="#fff" />
+							</TouchableOpacity>
+						</View>
 						<ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-			<View style={styles.formContainer}>
-				<TextInput
-					label="Student Name"
-									value={studentDetails.name}
+							<View style={styles.formContainer}>
+								<TextInput
+									label="Teacher Name"
+									value={teacherDetails.name}
 									onChangeText={(text) => handleChange('name', text)}
-					style={styles.input}
-					mode="outlined"
-				/>
+									style={styles.input}
+									mode="outlined"
+								/>
 								{errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 								{/* Image picker button */}
 								<TouchableOpacity style={styles.imageButton} onPress={handleImagePress}>
@@ -230,46 +202,28 @@ const AddStudents = () => {
 									anchor={
 										<TouchableOpacity style={styles.dropdownButton} onPress={openMenu}>
 											<Text style={styles.dropdownText}>
-												{studentDetails.stream || 'Select A/L Stream'}
+												{teacherDetails.subject || 'Select A/L Stream'}
 											</Text>
 										</TouchableOpacity>
 									}
 								>
-									{streams.map((stream) => (
-										<Menu.Item key={stream} onPress={() => handleStreamSelection(stream)} title={stream} />
+									{streams.map((subject) => (
+										<Menu.Item key={subject} onPress={() => handleStreamSelection(subject)} title={subject} />
 									))}
 								</Menu>
-								{errors.stream && <Text style={styles.errorText}>{errors.stream}</Text>}
 
 								<TextInput
 									label="contact"
-									value={studentDetails.contact}
+									value={teacherDetails.contact}
 									onChangeText={(text) => handleChange('contact', text)}
 									style={styles.input}
 									mode="outlined"
 								/>
 								{errors.contact && <Text style={styles.errorText}>{errors.contact}</Text>}
-								<TextInput
-									label="guardian"
-									value={studentDetails.guardian}
-									onChangeText={(text) => handleChange('guardian', text)}
-									style={styles.input}
-									mode="outlined"
-								/>
-								{errors.guardian && <Text style={styles.errorText}>{errors.guardian}</Text>}
-
-								<TextInput
-									label="guardian contact"
-									value={studentDetails.guardian_Contact}
-									onChangeText={(text) => handleChange('guardian_Contact', text)}
-									style={styles.input}
-									mode="outlined"
-								/>
-								{errors.guardian_Contact && <Text style={styles.errorText}>{errors.guardian_Contact}</Text>}
 
 								<TextInput
 									label="email"
-									value={studentDetails.email}
+									value={teacherDetails.email}
 									onChangeText={(text) => handleChange('email', text)}
 									style={styles.input}
 									mode="outlined"
@@ -277,8 +231,18 @@ const AddStudents = () => {
 								{errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
 								<TextInput
+									label="username"
+									value={teacherDetails.username}
+									onChangeText={(text) => handleChange('username', text)}
+									style={styles.input}
+									mode="outlined"
+								/>
+								{errors.username && <Text style={styles.errorText}>{errors.username}</Text>}
+
+
+								<TextInput
 									label="password"
-									value={studentDetails.password}
+									value={teacherDetails.password}
 									onChangeText={(text) => handleChange('password', text)}
 									secureTextEntry={!passwordVisible}
 									right={
@@ -293,7 +257,7 @@ const AddStudents = () => {
 								{errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 								<TextInput
 									label="Re-password"
-									value={studentDetails.Re_Password}
+									value={teacherDetails.Re_Password}
 									onChangeText={(text) => handleChange('Re_Password', text)}
 									secureTextEntry={!rePasswordVisible}
 									right={
@@ -307,12 +271,12 @@ const AddStudents = () => {
 								/>
 								{errors.Re_Password && <Text style={styles.errorText}>{errors.Re_Password}</Text>}
 
-								<Button mode="contained" onPress={handleAddStudent} style={styles.button} disabled={loading}>
-									{loading ? <ActivityIndicator size="small" color="#fff" /> : 'Add Student'}
-				</Button>
-			</View>
+								<Button mode="contained" onPress={handleAddTeachers} style={styles.button} disabled={loading}>
+									{loading ? <ActivityIndicator size="small" color="#fff" /> : 'Add Teacher'}
+								</Button>
+							</View>
 						</ScrollView>
-		</View>
+					</View>
 					{showAnimation && (
 						<Modal visible={showAnimation} transparent={true}>
 							<View style={styles.animationContainer}>
@@ -360,6 +324,7 @@ const styles = StyleSheet.create({
 		padding: 20,
 	},
 	input: {
+
 		width: '100%',
 	},
 	errorText: {
@@ -417,4 +382,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default AddStudents;
+export default AddTeachers;

@@ -1,17 +1,28 @@
-import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StatusBar, ActivityIndicator, TouchableOpacity, Image, StyleSheet, Platform, Dimensions, TextInput, FlatList, KeyboardAvoidingView, RefreshControl, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
+import { BarChart } from 'react-native-chart-kit';
+import { Card, Provider } from 'react-native-paper';
+import { DB } from '../../utils/DBConnect';
+import { collection, query, getDocs } from 'firebase/firestore';
+import TeacherDetailsModal from './TeacherDetailsModal';
+import LottieView from 'lottie-react-native';
 
 const sessionExpiryTime = 24 * 60 * 60 * 1000;
 
-const TeachersManagement = () => {
+const TeacherManagement = () => {
 	const navigation = useNavigation();
 	const [loading, setLoading] = useState(true);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
+
+	const [teachers, setTeachers] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
+	const [selectedTeacher, setSelectedStudent] = useState(null);
+	const [modalVisible, setModalVisible] = useState(false);
 
 	const handleBackPress = () => {
 		navigation.goBack();
@@ -30,6 +41,36 @@ const TeachersManagement = () => {
 		navigation.goBack();
 	};
 
+	const onRefresh = async () => {
+		setRefreshing(true);
+		await fetchTeachers();
+		setRefreshing(false);
+	};
+
+
+	const fetchTeachers = async () => {
+		try {
+			const studentCollection = collection(DB, 'Teacher');
+			const querySnapshot = await getDocs(query(studentCollection));
+			const teachersArray = [];
+			querySnapshot.forEach((doc) => {
+				const data = doc.data();
+				teachersArray.push({
+					id: doc.id,
+					name: data.name,
+					email: data.email,
+					contact: data.contact,
+					username: data.username,
+					subject: data.subject,
+					password: data.password,
+					profileImage: data.imageUri,// profileImage: data.profileImage,
+				});
+			});
+			setTeachers(teachersArray);
+		} catch (error) {
+			console.error('Error fetching teachers:', error);
+		}
+	};
 
 	useEffect(() => {
 		const validateSession = async () => {
@@ -37,127 +78,154 @@ const TeachersManagement = () => {
 			if (session) {
 				const { timestamp } = JSON.parse(session);
 				const currentTime = new Date().getTime();
-
-				// Check if session is still valid (within 24 hours)
 				if (currentTime - timestamp <= sessionExpiryTime) {
-					setIsAuthenticated(true); // Session is valid
+					setIsAuthenticated(true); 
 				} else {
-					// Session expired, remove it and redirect to login
 					await AsyncStorage.removeItem('userSession');
 					navigation.navigate('LoginScreen');
 				}
 			} else {
-				// No session found, redirect to login
 				navigation.navigate('LoginScreen');
 			}
 			setLoading(false);
 		};
 
-		validateSession(); // Run session validation on mount
+		validateSession();
+		fetchTeachers();
 	}, []);
 
 	if (loading) {
 		// Show loader while session is being validated
 		return (
-			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }
-			}>
+			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 				<ActivityIndicator size="large" color="#0000ff" />
 			</View>
 		);
 	}
 
 	if (!isAuthenticated) {
-		// If the session is invalid or expired, prevent rendering the content
 		return null;
 	}
 
+	const handleStudentPress = (teacher) => {
+		setSelectedStudent(teacher);
+		setModalVisible(true);
+	};
+
+	const handleCloseModal = () => {
+		setModalVisible(false);
+		setSelectedStudent(null);
+	};
+
+	// Filter teachers based on the search query
+	const filteredStudents = teachers.filter(teacher => {
+		const queryLower = searchQuery.toLowerCase();
+		return (
+			(teacher.name && teacher.name.toLowerCase().includes(queryLower)) ||
+			(teacher.email && teacher.email.toLowerCase().includes(queryLower))
+		);
+	});
+
+	const handleTeacherDelete = (studentId) => {
+		// Remove the deleted teacher from the list
+		setTeachers(prevStudents => prevStudents.filter(teacher => teacher.id !== studentId));
+	};
+
+	const handleTeacherUpdated = () => {
+		// Re-fetch the teachers to reflect updates
+		fetchTeachers();
+	};
+
+	const handleRefresh = () => {
+		fetchTeachers(); // Refresh the teachers list
+	};
+
 	return (
+		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+			<KeyboardAvoidingView
+				style={{ flex: 1, backgroundColor: 'white' }}
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+			>
+				<Provider>
 		<View>
 			<StatusBar barStyle="light-content" backgroundColor="#7781FB" />
 			<View style={styles.header}>
-				<TouchableOpacity style={styles.backButton} onPress={handleBackPress} >
+							<TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
 					<AntDesign name="arrowleft" size={24} color="#fff" style={{ marginLeft: 20 }} />
 				</TouchableOpacity>
-				< Text style={styles.headerTitle} >View All Teachers </Text>
-				< TouchableOpacity onPress={handleImagePress} >
-					<Image
-						source={require('../../assets/images/user.png')}
-						style={styles.userImage}
-					/>
+							<Text style={styles.headerTitle}>View All Teachers</Text>
+							<TouchableOpacity onPress={handleImagePress}>
+								<Image source={require('../../assets/images/user.png')} style={styles.userImage} />
 				</TouchableOpacity>
 			</View>
-			{/* Dropdown */}
-			{
-				dropdownVisible && (
-					<View style={styles.dropdown}>
-						<TouchableOpacity onPress={handleProfile} style={styles.dropdownItem} >
-							<Text style={styles.dropdownText}> Profile </Text>
-						</TouchableOpacity>
-						< TouchableOpacity onPress={handleLogout} style={styles.dropdownItem} >
-							<Text style={styles.dropdownText}> Logout </Text>
-						</TouchableOpacity>
+
+						{/* Dropdown */}
+						{dropdownVisible && (
+							<View style={styles.dropdown}>
+								<TouchableOpacity onPress={handleProfile} style={styles.dropdownItem}>
+									<Text style={styles.dropdownText}>Profile</Text>
+								</TouchableOpacity>
+								<TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
+									<Text style={styles.dropdownText}>Logout</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+
+
+
+						{/* Search Bar */}
+						<View style={styles.searchContainer}>
+							<View style={styles.rowContainer}>
+								<TextInput
+									style={styles.searchInput}
+									placeholder="Search Teacher..."
+									value={searchQuery}
+									onChangeText={setSearchQuery}
+								/>
+								{/* Add Teacher Button */}
+								<TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddTeachers')}>
+									<FontAwesome name="plus" size={24} color="#fff" />
+								</TouchableOpacity>
+							</View>
+						</View>
+
+						<FlatList style={styles.scrollView}
+							data={filteredStudents} // Use filtered teachers for rendering
+							renderItem={({ item }) => (
+								<TouchableOpacity style={styles.squareButton} onPress={() => {
+									setSelectedStudent(item);
+									setModalVisible(true);
+								}}>
+									<Image source={{ uri: item.profileImage }} style={styles.profileImage} />
+									<Text style={styles.buttonText}>{item.name.split(' ')[0]}</Text>
+								</TouchableOpacity>
+							)}
+							keyExtractor={item => item.id}
+							numColumns={3} // This ensures three cards per row
+							columnWrapperStyle={styles.buttonRow} // This aligns items in rows
+							refreshControl={
+								<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />  // Implement refresh control
+							}
+						/>
+
+						{/* Teacher Details Modal */}
+						<TeacherDetailsModal
+							visible={modalVisible}
+							teacher={selectedTeacher}
+							onClose={() => setModalVisible(false)}
+							onTeacherDeleted={handleTeacherDelete}
+							onTeacherUpdated={handleTeacherUpdated}
+							onRefresh={handleRefresh}
+						/>
 					</View>
-				)
-			}
-
-			{/* Search Bar */}
-			<View style={styles.searchContainer}>
-				<View style={styles.rowContainer}>
-					<TextInput
-						style={styles.searchInput}
-						placeholder="Search Student..."
-						value={searchQuery}
-						onChangeText={setSearchQuery}
-					/>
-					{/* Add Student Button */}
-					<TouchableOpacity style={styles.addButton}>
-						<FontAwesome name="plus" size={24} color="#fff" />
-					</TouchableOpacity>
-				</View>
-			</View>
-
-			{/* Square Card Buttons Row */}
-			<View style={styles.buttonRow}>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 1</Text>
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 2</Text>
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 3</Text>
-				</TouchableOpacity>
-			</View>
-
-			<View style={styles.buttonRow}>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 1</Text>
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 2</Text>
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 3</Text>
-				</TouchableOpacity>
-			</View>
-
-			<View style={styles.buttonRow}>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 1</Text>
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 2</Text>
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.squareButton}>
-					<Text style={styles.buttonText}>Button 3</Text>
-				</TouchableOpacity>
-			</View>
-
-		</View>
+				</Provider>
+			</KeyboardAvoidingView>
+		</TouchableWithoutFeedback>
 	);
+
 }
 
-export default TeachersManagement;
+export default TeacherManagement;
 
 const styles = StyleSheet.create({
 	header: {
@@ -179,107 +247,103 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 		fontSize: 20,
 		textAlign: 'center',
-		flex: 2,
-	},
-	backButton: {
-		position: 'flex',
-		left: 20,
+		flex: 1,
 	},
 	userImage: {
-		width: 35,
-		height: 35,
+		width: 40,
+		height: 40,
 		borderRadius: 20,
-		position: 'flex',
-		right: 20,
+		marginRight: 20,
+	},
+	scrollView: {
+		height: '150%',
+		marginBottom: 20,
 	},
 	dropdown: {
 		position: 'absolute',
-		top: 50,
-		right: 30,
+		top: 60,
+		right: 20,
 		backgroundColor: '#fff',
-		borderRadius: 8,
+		borderRadius: 10,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.3,
 		shadowRadius: 3,
 		elevation: 5,
-		zIndex: 1,
-		width: 100,
-		display: 'flex',
-		alignItems: 'center',
 	},
 	dropdownItem: {
 		padding: 10,
 	},
 	dropdownText: {
-		color: '#000',
-		fontSize: 16,
+		color: '#7781FB',
+	},
+	card: {
+		margin: 20,
+		borderRadius: 10,
+		padding: 10,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 1,
+	},
+	cardTitle: {
+		fontSize: 18,
+		fontWeight: 'bold',
+		marginBottom: 10,
 	},
 	searchContainer: {
-		margin: 20,
-		paddingLeft: 10,
-	},
-	searchInput: {
-		height: 40,
-		borderColor: 'black',
-		borderWidth: 1,
-		borderRadius: 5,
-		paddingHorizontal: 10,
-		width: '80%',
-	},
-	buttonRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		marginHorizontal: 20,
-		marginVertical: 10,
-	},
-	squareButton: {
-		flex: 1,
-		height: 100, // Set a fixed height for square shape
-		backgroundColor: '#7781FB',
-		marginHorizontal: 5,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	buttonText: {
-		color: '#fff',
-		fontSize: 16,
+		paddingHorizontal: 20,
 	},
 	rowContainer: {
 		flexDirection: 'row',
+		alignItems: 'center',
 		justifyContent: 'space-between',
-
-		paddingRight: 6,
-
-	},
-	buttonRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		marginHorizontal: 20,
 		marginVertical: 10,
 	},
-	squareButton: {
+	searchInput: {
 		flex: 1,
-		height: 100, // Set a fixed height for square shape
-		backgroundColor: '#7781FB',
-		marginHorizontal: 5,
-		borderRadius: 8,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	buttonText: {
-		color: '#fff',
-		fontSize: 16,
+		borderColor: '#000',
+		borderWidth: 1,
+		borderRadius: 5,
+		padding: 10,
+		marginRight: 10,
+		backgroundColor: '#fff',
 	},
 	addButton: {
 		backgroundColor: '#7781FB',
-		borderRadius: 10,
-		width: 40,
-		height: 40,
+		padding: 10,
+		borderRadius: 5,
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginLeft: 10,
 	},
+	squareButton: {
+		backgroundColor: '#fff',
+		height: 'fit-content',
+		width: 'fit-content',
+		margin: 10,
+		borderRadius: 10,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.2,
+		shadowRadius: 1,
+		elevation: 2,
+	},
+	profileImage: {
+		width: 100,
+		height: 100,
+		borderRadius: 10,
+	},
+	buttonText: {
+		color: '#333',
+		fontWeight: 'bold',
+		textAlign: 'center',
+		zIndex: 1,
+
+	},
+	buttonRow: {
+		justifyContent: 'space-between',
+	},
+
 
 });
