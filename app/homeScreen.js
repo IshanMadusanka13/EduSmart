@@ -1,17 +1,21 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Image, TouchableOpacity, ScrollView, Dimensions, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AppView } from '../components/AppView';
 import { AppText } from '../components/AppText';
 import { Colors } from '../constants/Colors';
 import { useUser } from '../hooks/UserContext';
 import { UserTypes } from '../constants/UserTypes';
+import { DB } from '../utils/DBConnect';
+import { collection, getDocs } from 'firebase/firestore';
+import { BarChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { user, setUser } = useUser();
+
 
   const handleLogout = () => {
     setUser(null);
@@ -51,6 +55,171 @@ export default function HomeScreen() {
 
 const LoadHomeScreen = () => {
   const navigation = useNavigation();
+
+  const user = useUser();
+
+  if (!user) {
+    navigation.navigate('Login');
+  } else {
+    var typeUser = user.user.user;
+
+    switch (user.user.userType) {
+
+      case UserTypes.student:
+
+        const [chartData, setChartData] = useState({
+          labels: [],
+          datasets: [{ data: [] }],
+        });
+
+        useEffect(() => {
+          // Fetch data from Firestore
+          const fetchChartData = async () => {
+            try {
+              const feedbackCollection = collection(DB, 'new_feedback');
+              const feedbackSnapshot = await getDocs(feedbackCollection);
+              const labels = [];
+              const data = [];
+
+              feedbackSnapshot.forEach(doc => {
+                const { totalRating, teacherId } = doc.data();
+                labels.push(teacherId); // Add teacherId to labels
+                data.push(totalRating); // Add totalRating to data
+              });
+
+              // Set chart data
+              setChartData({
+                labels,
+                datasets: [{ data }],
+              });
+            } catch (error) {
+              console.error("Error fetching chart data: ", error);
+            }
+          };
+
+          fetchChartData();
+        }, []);
+
+        return (
+          <View>
+
+            {/* Bar Chart */}
+            <View style={styles.chartContainer}>
+              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
+              <BarChart
+                data={chartData1}
+                width={Dimensions.get('window').width - 40} // Full width minus padding
+                height={250}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  color: () => '#007BFF',
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '',
+                    strokeWidth: 1,
+                    stroke: '#e4e4e4',
+                  },
+                }}
+                verticalLabelRotation={10}
+              />
+            </View>
+
+
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.primary }]}
+              onPress={() => navigation.navigate('StudentAttend',{ studentId: typeUser.studentId })}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Student Mark Attendance</AppText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('NearbyClasses')}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
+            </TouchableOpacity>
+          </View>
+        );
+
+
+      case UserTypes.parent:
+        const [chartData1, setChartData1] = useState({
+          labels: [],
+          datasets: [{ data: [] }],
+        });
+
+        useEffect(() => {
+          // Fetch data from Firestore
+          const fetchChartData = async () => {
+            try {
+              const feedbackCollection = collection(DB, 'new_feedback');
+              const feedbackSnapshot = await getDocs(feedbackCollection);
+              const labels = [];
+              const data = [];
+
+              feedbackSnapshot.forEach(doc => {
+                const { totalRating, teacherId } = doc.data();
+                labels.push(teacherId); // Add teacherId to labels
+                data.push(totalRating); // Add totalRating to data
+              });
+
+              // Set chart data
+              setChartData1({
+                labels,
+                datasets: [{ data }],
+              });
+            } catch (error) {
+              console.error("Error fetching chart data: ", error);
+            }
+          };
+
+          fetchChartData();
+        }, []);
+
+        return (
+          <View>
+
+            {/* Bar Chart */}
+            <View style={styles.chartContainer}>
+              <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
+              <BarChart
+                data={chartData1}
+                width={Dimensions.get('window').width - 40} // Full width minus padding
+                height={250}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  color: () => '#007BFF',
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '',
+                    strokeWidth: 1,
+                    stroke: '#e4e4e4',
+                  },
+                }}
+                verticalLabelRotation={10}
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: Colors.light.success }]}
+              onPress={() => navigation.navigate('ParentNotification', { studentId: typeUser.studentId })}
+            >
+              <Image style={styles.buttonIcon}
+              />
+              <AppText style={styles.buttonText}>Parent Notifications</AppText>
+            </TouchableOpacity>
   const { user } = useUser();
 
   const renderButton = (icon, text, onPress, color) => (
@@ -175,6 +344,22 @@ const LoadHomeScreen = () => {
 };
 
 
+const chartConfig = {
+  backgroundGradientFrom: "#1E2923",
+  backgroundGradientTo: "#08130D",
+  decimalPlaces: 0, // Optional, defaults to 2dp
+  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  style: {
+    borderRadius: 16,
+  },
+  propsForDots: {
+    r: "6",
+    strokeWidth: "2",
+    stroke: "#ffa726",
+  },
+};
+
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
@@ -204,6 +389,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     marginTop: 10,
+  },
+  chartContainer: {
+    marginBottom: 40,
+    alignItems: 'center',
   },
   content: {
     flex: 1,

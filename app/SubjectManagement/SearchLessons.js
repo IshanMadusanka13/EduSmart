@@ -84,7 +84,7 @@ const SearchLessons = () => {
                                     fontSize: 13,
                                     color: '#656569',
                                 }}>Teacher</Text>
-                            <Text >{item.teacherId}Hi</Text>
+                            <Text >{item.teacher}Hi</Text>
 
 
                             <Text style={{

@@ -190,7 +190,7 @@ const ViewClasses = () => {
                                     fontSize: 12,
                                     marginTop: 12,
                                     alignSelf: 'flex-end'
-                                }}>Batch<span style={{fontSize: 18}}> {item.batch}</span></Text>
+                                }}>Batch<Text style={{ fontSize: 18 }}> {item.batch}</Text></Text>
                             </View>       
 
                         </View>

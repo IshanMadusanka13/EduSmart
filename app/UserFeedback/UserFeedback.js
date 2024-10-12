@@ -5,7 +5,7 @@ import { useNavigation, useRoute, } from '@react-navigation/native';
 import Lottie from 'lottie-react-native';
 import EmojiSlider from "./EmojiSlider";
 import { DB } from '../../utils/DBConnect';
-import { collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, getDocs, setDoc } from 'firebase/firestore';
 import LottieView from 'lottie-react-native';
 
 
@@ -36,11 +36,51 @@ const UserFeedback = () => {
 			const feedbackCollectionRef = collection(DB, "feedback"); // Adjust collection name as needed
 			await addDoc(feedbackCollectionRef, {
 				classId,
-				rating: selectedEmoji + 1, // Adjust rating to 1-5 scale
+				rating: selectedEmoji, // Adjust rating to 1-5 scale
 				feedback: feedbackText,
 				teacherId: teacherId,
 				createdAt: new Date(), // Add timestamp if needed
 			});
+
+			const classDocRef = doc(DB, "class", classId);
+			const classDoc = await getDoc(classDocRef);
+			const teacherName = classDoc.exists() ? classDoc.data().teacherId : ''; // Adjust field name accordingly
+
+			const feedbackSnapshot = await getDocs(collection(DB, "feedback"));
+			let totalRating = 0;
+
+			feedbackSnapshot.forEach((doc) => {
+				const data = doc.data();
+				if (data.classId === classId) {
+					totalRating += data.rating;
+
+				}
+			});
+
+			const feedbackDocRef = doc(DB, "new_feedback", classId);
+
+			const feedbackDoc = await getDoc(feedbackDocRef);
+
+
+			if (feedbackDoc.exists()) {
+				// If classId exists, update the rating and other fields
+				await setDoc(feedbackDocRef, {
+					rating: selectedEmoji, // Update the rating (adjust as per your logic)
+					totalRating: feedbackDoc.data().totalRating + selectedEmoji, // Update total rating (example logic)
+					feedback: feedbackText, // Optional: update the feedback
+					teacherId: teacherId, // Optional: update teacher info
+				}, { merge: true }); // Merge: only update the specified fields without overwriting the document
+			} else {
+				// If classId doesn't exist, create a new document
+				await setDoc(feedbackDocRef, {
+					classId, // Unique classId
+					rating: selectedEmoji + 1, // New rating
+					totalRating: selectedEmoji + 1, // Initialize total rating
+					feedback: feedbackText, // Add feedback
+					teacherId: teacherId, // Add teacherId
+					createdAt: new Date(), // Timestamp if needed
+				});
+			}
 
 			setShowAnimation(true);
 

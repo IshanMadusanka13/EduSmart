@@ -68,9 +68,9 @@ const TeaLogin = () => {
                     fontSize :14,
                     textAlign: 'center',
                     marginTop: 12
-                }}>Do not have a account yet?<span style={{
+                }}>Do not have a account yet?<Text style={{
                     color: 'red'
-                }}> Contact Admin</span></Text>
+                    }}> Contact Admin</Text></Text>
                
                 
             </View>
