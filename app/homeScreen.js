@@ -6,10 +6,11 @@ import { AppText } from '../components/AppText';
 import { Colors } from '../constants/Colors';
 import { useUser } from '../hooks/UserContext';
 import { UserTypes } from '../constants/UserTypes';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { DB } from '../utils/DBConnect';
 import { collection, getDocs } from 'firebase/firestore';
 import { BarChart } from 'react-native-chart-kit';
->>>>>>>>> Temporary merge branch 2
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -53,8 +54,7 @@ export default function HomeScreen() {
 
 const LoadHomeScreen = () => {
   const navigation = useNavigation();
-
-  const user = useUser();
+  const { user } = useUser();
 
   const renderButton = (icon, text, onPress, color) => (
     <TouchableOpacity
@@ -76,100 +76,12 @@ const LoadHomeScreen = () => {
     </View>
   );
 
-<<<<<<<<< Temporary merge branch 1
-      if (!user) {
-        navigation.navigate('Login');
-      } else {
-        var typeUser = user?.user;
-    
-        switch (user?.userType) {
-          case UserTypes.student:
-            return (
-              <>
-                {renderButtonRow([
-                  {
-                    icon: 'qr-code-outline',
-                    text: 'Mark Attendance',
-                    onPress: () => navigation.navigate('StudentAttend', { studentId: typeUser.studentId }),
-                    color: Colors.light.primary
-                  },
-                  {
-                    icon: 'location-outline',
-                    text: 'Nearby Classes',
-                    onPress: () => navigation.navigate('NearbyClasses'),
-                    color: Colors.light.success
-                  }
-                ])}
-                {renderButtonRow([
-                 
-                  {
-                    icon: 'book-outline',
-                    text: 'Assignments',
-                    onPress: () => navigation.navigate('Assignments'),
-                    color: Colors.light.info
-                  }
-                ])}
-              </>
-            );
+  if (!user) {
+    navigation.navigate('Login');
+  } else {
+    var typeUser = user?.user;
 
-            case UserTypes.parent:
-              return (
-                <>
-                  {renderButtonRow([
-                    {
-                      icon: 'notifications-outline',
-                      text: 'Parent Notifications',
-                      onPress: () => navigation.navigate('ParentNotification', { studentId: typeUser.studentId }),
-                      color: Colors.light.primary
-                    },
-                    {
-                      icon: 'location-outline',
-                      text: 'Nearby Classes',
-                      onPress: () => navigation.navigate('NearbyClasses'),
-                      color: Colors.light.success
-                    }
-                  ])}
-                </>
-              );
-
-          case UserTypes.teacher:
-          return (
-            <View></View>
-          );
-
-          case UserTypes.InstituteManager:
-        return (
-          <>
-            {renderButtonRow([
-              {
-                icon: 'checkmark-circle-outline',
-                text: 'Mark Attendance',
-                onPress: () => navigation.navigate('MarkAttendance'),
-                color: Colors.light.primary
-              },
-              {
-                icon: 'document-text-outline',
-                text: 'Attendance Report',
-                onPress: () => navigation.navigate('AttendanceReport'),
-                color: Colors.light.info
-              }
-            ])}
-            {renderButtonRow([
-              {
-                icon: 'add-circle-outline',
-                text: 'Add Classes',
-                onPress: () => navigation.navigate('AddClass'),
-                color: Colors.light.success
-              },
-              {
-                icon: 'location-outline',
-                text: 'Nearby Classes',
-                onPress: () => navigation.navigate('NearbyClasses'),
-                color: Colors.light.success
-              }
-            ])}
-          </>
-=========
+    switch (user?.userType) {
       case UserTypes.student:
 
         const [chartData, setChartData] = useState({
@@ -205,9 +117,11 @@ const LoadHomeScreen = () => {
           fetchChartData();
         }, []);
 
-        return (
-          <View>
 
+        return (
+
+
+          <>
             {/* Bar Chart */}
             <View style={styles.chartContainer}>
               <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
@@ -235,36 +149,32 @@ const LoadHomeScreen = () => {
 
 
 
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.primary }]}
-              onPress={() => navigation.navigate('StudentAttend',{ studentId: typeUser.studentId })}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Student Mark Attendance</AppText>
-            </TouchableOpacity>
+            {renderButtonRow([
+              {
+                icon: 'qr-code-outline',
+                text: 'Mark Attendance',
+                onPress: () => navigation.navigate('StudentAttend', { studentId: typeUser.studentId }),
+                color: Colors.light.primary
+              },
+              {
+                icon: 'location-outline',
+                text: 'Nearby Classes',
+                onPress: () => navigation.navigate('NearbyClasses'),
+                color: Colors.light.success
+              }
+            ])}
+            {renderButtonRow([
 
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('NearbyClasses')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
-            </TouchableOpacity>
-          </View>
->>>>>>>>> Temporary merge branch 2
+              {
+                icon: 'book-outline',
+                text: 'Assignments',
+                onPress: () => navigation.navigate('Assignments'),
+                color: Colors.light.info
+              }
+            ])}
+          </>
         );
 
-    
-        default:
-          return null;
-        }
-      }
-};
-
-<<<<<<<<< Temporary merge branch 1
-=========
       case UserTypes.parent:
         const [chartData1, setChartData1] = useState({
           labels: [],
@@ -298,10 +208,8 @@ const LoadHomeScreen = () => {
 
           fetchChartData();
         }, []);
-
         return (
-          <View>
-
+          <>
             {/* Bar Chart */}
             <View style={styles.chartContainer}>
               <Text style={styles.cardTitle}>Teachers Review Status summery</Text>
@@ -326,24 +234,21 @@ const LoadHomeScreen = () => {
                 verticalLabelRotation={10}
               />
             </View>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('ParentNotification', { studentId: typeUser.studentId })}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Parent Notifications</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('NearbyClasses')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
-            </TouchableOpacity>
-          </View>
+            {renderButtonRow([
+              {
+                icon: 'notifications-outline',
+                text: 'Parent Notifications',
+                onPress: () => navigation.navigate('ParentNotification', { studentId: typeUser.studentId }),
+                color: Colors.light.primary
+              },
+              {
+                icon: 'location-outline',
+                text: 'Nearby Classes',
+                onPress: () => navigation.navigate('NearbyClasses'),
+                color: Colors.light.success
+              }
+            ])}
+          </>
         );
 
       case UserTypes.teacher:
@@ -353,67 +258,45 @@ const LoadHomeScreen = () => {
 
       case UserTypes.InstituteManager:
         return (
-          <View>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('MarkAttendance')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Mark Attendance</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.info }]}
-              onPress={() => navigation.navigate('AttendanceReport')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Attendance Report</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('AddClass')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>Add Classes</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: Colors.light.success }]}
-              onPress={() => navigation.navigate('NearbyClasses')}
-            >
-              <Image style={styles.buttonIcon}
-              />
-              <AppText style={styles.buttonText}>View Nearby Classes</AppText>
-            </TouchableOpacity>
-          </View>
+          <>
+            {renderButtonRow([
+              {
+                icon: 'checkmark-circle-outline',
+                text: 'Mark Attendance',
+                onPress: () => navigation.navigate('MarkAttendance'),
+                color: Colors.light.primary
+              },
+              {
+                icon: 'document-text-outline',
+                text: 'Attendance Report',
+                onPress: () => navigation.navigate('AttendanceReport'),
+                color: Colors.light.info
+              }
+            ])}
+            {renderButtonRow([
+              {
+                icon: 'add-circle-outline',
+                text: 'Add Classes',
+                onPress: () => navigation.navigate('AddClass'),
+                color: Colors.light.success
+              },
+              {
+                icon: 'location-outline',
+                text: 'Nearby Classes',
+                onPress: () => navigation.navigate('NearbyClasses'),
+                color: Colors.light.success
+              }
+            ])}
+          </>
         );
 
+
       default:
-        break;
+        return null;
     }
   }
-}
->>>>>>>>> Temporary merge branch 2
-
-const chartConfig = {
-  backgroundGradientFrom: "#1E2923",
-  backgroundGradientTo: "#08130D",
-  decimalPlaces: 0, // Optional, defaults to 2dp
-  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-  style: {
-    borderRadius: 16,
-  },
-  propsForDots: {
-    r: "6",
-    strokeWidth: "2",
-    stroke: "#ffa726",
-  },
 };
+
 
 const styles = StyleSheet.create({
   scrollView: {
